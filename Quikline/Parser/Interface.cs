@@ -25,12 +25,16 @@ internal struct Interface(CommandAttribute commandAttribute)
 
 internal readonly record struct Option(
     string FieldName,
+    bool Required,
     Short? Short,
     Long Long,
     Type Type,
     object? Value,
     string? Description)
 {
+    public static Option ShortOnly(Short @short) => 
+        new Option("", false, @short, Long.Empty, typeof(bool), false, null);
+    
     public bool Matches(string argName)
     {
         if (Short != null)

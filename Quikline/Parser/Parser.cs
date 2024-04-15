@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using Quikline.Attributes;
 
 namespace Quikline.Parser;
@@ -32,6 +31,13 @@ public static class Quik
             Console.Out.Write(version);
             Environment.Exit(0);
             return default;
+        }
+
+        if (MissingRequired(@interface, passedArgs, out string[] missing))
+        {
+            Console.Error.WriteLine($"Incorrect usage. Missing required options: {missing}");
+            Console.Error.Write("Use --help for more information.");
+            Environment.Exit(1);
         }
         
         object value = Activator.CreateInstance<T>();
@@ -82,6 +88,7 @@ public static class Quik
 
             var option = new Option(
                 field.Name,
+                optionAttr.Required,
                 @short,
                 @long,
                 field.FieldType,
@@ -103,11 +110,11 @@ public static class Quik
         if (commandAttr.Version)
         {
             bool isUsingLowerCaseV = @interface.Options.Contains(
-                new Option("", new Short(@interface.ShortPrefix, new Name("v")), Long.Empty, typeof(bool), null, ""),
+                Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("v"))),
                 new ShortOptionEqualityComparer());
             
             bool isUsingUpperCaseV = @interface.Options.Contains(
-                new Option("", new Short(@interface.ShortPrefix, new Name("V")), Long.Empty, typeof(bool), null, ""),
+                Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("V"))),
                 new ShortOptionEqualityComparer());
 
             Short? shortVersion = (hasv: isUsingLowerCaseV, hasV: isUsingUpperCaseV) switch
@@ -117,15 +124,15 @@ public static class Quik
                 _ => null
             };
             
-            @interface.Options.Insert(0, new Option("", shortVersion, new Long(@interface.LongPrefix, new Name("version")), typeof(bool), null, "Print the version"));
+            @interface.Options.Insert(0, new Option("", false, shortVersion, new Long(@interface.LongPrefix, new Name("version")), typeof(bool), null, "Print the version"));
         }
 
         bool isUsingLowerCaseH = @interface.Options.Contains(
-            new Option("", new Short(@interface.ShortPrefix, new Name("h")), Long.Empty, typeof(bool), null, ""),
+            Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("h"))),
             new ShortOptionEqualityComparer());
         
         bool isUsingUpperCaseH = @interface.Options.Contains(
-            new Option("", new Short(@interface.ShortPrefix, new Name("H")), Long.Empty, typeof(bool), null, ""),
+            Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("H"))),
             new ShortOptionEqualityComparer());
         
         Short? shortHelp = (isUsingLowerCaseH, isUsingUpperCaseH) switch
@@ -135,7 +142,7 @@ public static class Quik
             _ => null
         };
 
-        @interface.Options.Insert(0, new Option("", shortHelp, new Long(@interface.LongPrefix, new Name("help")), typeof(bool), null, "Print this help message"));
+        @interface.Options.Insert(0, new Option("", false, shortHelp, new Long(@interface.LongPrefix, new Name("help")), typeof(bool), null, "Print this help message"));
 
         return @interface;
     }
@@ -258,6 +265,16 @@ public static class Quik
         }
 
         parsed.AddOption(option);
+    }
+
+    private static bool MissingRequired(Interface @interface, Args args, out string[] missing)
+    {
+        missing = @interface.Options
+            .Where(o => o.Required && !args.Options.Contains(o, new ShortOptionEqualityComparer()))
+            .Select(o => o.Long.Name.ToString())
+            .ToArray();
+
+        return missing.Length > 0;
     }
 
     private static void PrintHelp(Interface @interface)
