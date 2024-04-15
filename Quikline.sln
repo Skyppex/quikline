@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quikline", "Quikline\Quikline.csproj", "{4E404BD6-4D1C-4FE6-8C07-CD740277816A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestCLI", "TestCLI\TestCLI.csproj", "{91636A32-B9E0-48C7-BFA2-6CF914962A8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{4E404BD6-4D1C-4FE6-8C07-CD740277816A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E404BD6-4D1C-4FE6-8C07-CD740277816A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E404BD6-4D1C-4FE6-8C07-CD740277816A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91636A32-B9E0-48C7-BFA2-6CF914962A8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91636A32-B9E0-48C7-BFA2-6CF914962A8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91636A32-B9E0-48C7-BFA2-6CF914962A8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91636A32-B9E0-48C7-BFA2-6CF914962A8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

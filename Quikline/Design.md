@@ -89,7 +89,7 @@ Commands only support certain types:
 ```csharp
 // Can have multiple Command attributes for different purposes
 // If the same value is provided, the last one takes precedence
-[Command(Version=true, About=true)]
+[Command(Version=true)]
 [Command(Description="My command line tool")]
 [Group(Name="logging", Required=false, Multiple=Multiple.OnlyOne)]
 public readonly struct MyCommand {

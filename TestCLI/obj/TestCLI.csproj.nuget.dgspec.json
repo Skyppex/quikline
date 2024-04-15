@@ -1,0 +1,122 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj": {
+      "version": "0.1.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj",
+        "projectName": "Quikline",
+        "projectPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj",
+        "packagesPath": "C:\\Users\\brage.ingebrigtsen\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\brage.ingebrigtsen\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj": {
+      "version": "0.1.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj",
+        "projectName": "TestCLI",
+        "projectPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj",
+        "packagesPath": "C:\\Users\\brage.ingebrigtsen\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\brage.ingebrigtsen\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj": {
+                "projectPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

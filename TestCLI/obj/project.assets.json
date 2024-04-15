@@ -1,11 +1,30 @@
 {
   "version": 3,
   "targets": {
-    "net8.0": {}
+    "net8.0": {
+      "Quikline/0.1.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/Quikline.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Quikline.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "Quikline/0.1.0": {
+      "type": "project",
+      "path": "../Quikline/Quikline.csproj",
+      "msbuildProject": "../Quikline/Quikline.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    "net8.0": []
+    "net8.0": [
+      "Quikline >= 0.1.0"
+    ]
   },
   "packageFolders": {
     "C:\\Users\\brage.ingebrigtsen\\.nuget\\packages\\": {}
@@ -13,11 +32,11 @@
   "project": {
     "version": "0.1.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj",
-      "projectName": "Quikline",
-      "projectPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj",
+      "projectUniqueName": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj",
+      "projectName": "TestCLI",
+      "projectPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj",
       "packagesPath": "C:\\Users\\brage.ingebrigtsen\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\obj\\",
+      "outputPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\brage.ingebrigtsen\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -33,7 +52,11 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj": {
+              "projectPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
