@@ -30,6 +30,7 @@ Commands only support certain types:
 - `double`
 - `char`
 - `string`
+- `enums`
 
 #### Nice to have
 - `uint`

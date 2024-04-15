@@ -42,7 +42,7 @@ internal readonly record struct Option(
 
     public override string ToString() =>
         (Short != null ? $"{Short} {Long}" : Long.ToString()) +
-        $"{(Type != typeof(bool) ? Type.Name.ToLower() : "")}" + (Description != null ? $" - {Description}" : "");
+        $"{(Type != typeof(bool) ? $": {Type.GetUsageName()}" : "")}" + (Description != null ? $" - {Description}" : "");
 }
 
 internal readonly record struct Argument(string Name);

@@ -15,11 +15,11 @@ public readonly struct Args
     [Option(Short = 'f', Description = "Force the operation.")]
     public readonly bool Force;
     
-    [Option(Short = 'v', Description = "Verbose output.")]
-    public readonly bool Verbose;
+    [Option(Short = 'l', Description = "LogLevel.", Default = "info")]
+    public readonly LogLevel LogLevel;
     
-    [Option(Short = 'q', Description = "Quiet output.")]
-    public readonly bool Quiet;
+    [Option(Short = 'n', Description = "Name.")]
+    public readonly string Name;
 
     [Option(Short = 's', Description = "Case insensitive.")]
     public readonly bool CaseInsensitive;
@@ -41,4 +41,14 @@ public readonly struct Args
         builder.Append("}");
         return builder.ToString();
     }
+}
+
+public enum LogLevel
+{
+    Debug,
+    Info,
+    Warn,
+    Error,
+    Critical,
+    Fatal
 }

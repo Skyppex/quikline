@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using Quikline.Attributes;
 
 namespace Quikline.Parser;
@@ -86,6 +87,14 @@ public static class Quik
                 field.FieldType,
                 null,
                 optionAttr.Description);
+
+            if (field.FieldType.IsEnum)
+            {
+                if (optionAttr.Default is null)
+                    option = option with { Value = Enum.GetValues(field.FieldType).GetValue(0) };
+                else
+                    option = option with { Value = Enum.Parse(field.FieldType, optionAttr.Default.ToString()!, ignoreCase: true) };
+            }
             
             @interface.AddOption(option);
         }
@@ -187,7 +196,7 @@ public static class Quik
         }
                 
         string value = iterator.Current;
-                
+        
         if (option.Type == typeof(int))
         {
             if (!int.TryParse(value, out int intValue))
@@ -236,6 +245,17 @@ public static class Quik
         {
             option = option with { Value = value };
         }
+        else if (option.Type.IsEnum)
+        {
+            if (!Enum.TryParse(option.Type, value, ignoreCase: true, out object? enumValue))
+            {
+                Console.Error.WriteLine($"Incorrect usage. Expected an enum value for option {arg}.");
+                Console.Error.Write("Use --help for more information.");
+                Environment.Exit(1);
+            }
+
+            option = option with { Value = enumValue };
+        }
 
         parsed.AddOption(option);
     }
@@ -253,7 +273,7 @@ public static class Quik
         
         string argumentString = string.Join(" ", arguments.Select(a => a.Name));
         
-        Console.Out.Write($"USAGE: {@interface.ProgramName} {{options}} {argumentString}");
+        Console.Out.Write($"Usage: {@interface.ProgramName} {{options}} {argumentString}");
 
         if (options.Count > 0)
         {

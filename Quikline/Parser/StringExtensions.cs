@@ -2,6 +2,17 @@
 
 namespace Quikline.Parser;
 
+internal static class TypeExtensions
+{
+    public static string GetUsageName(this Type type)
+    {
+        if (type.IsEnum)
+            return $"({string.Join('|', Enum.GetNames(type)).ToLower()})";
+
+        return type.Name.ToLower();
+    }
+}
+
 internal static class StringExtensions
 {
     public static string[] SplitPascalCase(this string value)
