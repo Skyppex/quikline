@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Quikline")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("0.1.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.0+a0058b47a6399f0cc6666a0e4ecb006980361a98")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.0+fa540f4c0cac54e4221edaf5615c2b3f90b3619e")]
 [assembly: System.Reflection.AssemblyProductAttribute("Quikline")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Quikline")]
 [assembly: System.Reflection.AssemblyVersionAttribute("0.1.0.0")]

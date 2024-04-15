@@ -8,8 +8,8 @@ internal struct Interface(CommandAttribute commandAttribute)
     public readonly string? Description = commandAttribute.Description;
     public readonly Prefix ShortPrefix = new(commandAttribute.ShortPrefix);
     public readonly Prefix LongPrefix = new(commandAttribute.LongPrefix);
-    public ICollection<Option> Options { get; set; } = [];
-    public ICollection<Argument> Arguments { get; set; } = [];
+    public List<Option> Options { get; set; } = [];
+    public List<Argument> Arguments { get; set; } = [];
     
     public void AddOption(Option option) => Options.Add(option);
     public void AddArgument(Argument argument) => Arguments.Add(argument);
@@ -24,8 +24,12 @@ internal struct Interface(CommandAttribute commandAttribute)
 }
 
 internal readonly record struct Option(
+    string FieldName,
     Short? Short,
-    Long Long)
+    Long Long,
+    Type Type,
+    object? Value,
+    string? Description)
 {
     public bool Matches(string argName)
     {
@@ -35,6 +39,10 @@ internal readonly record struct Option(
             
         return argName == $"{Long.Prefix}{Long.Name}";
     }
+
+    public override string ToString() =>
+        (Short != null ? $"{Short} {Long}" : Long.ToString()) +
+        $"{(Type != typeof(bool) ? Type.Name.ToLower() : "")}" + (Description != null ? $" - {Description}" : "");
 }
 
-internal readonly record struct Argument;
+internal readonly record struct Argument(string Name);

@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj": {}
+    "D:\\Coding\\quikline\\TestCLI\\TestCLI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj": {
+    "D:\\Coding\\quikline\\Quikline\\Quikline.csproj": {
       "version": "0.1.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj",
+        "projectUniqueName": "D:\\Coding\\quikline\\Quikline\\Quikline.csproj",
         "projectName": "Quikline",
-        "projectPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj",
-        "packagesPath": "C:\\Users\\brage.ingebrigtsen\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\obj\\",
+        "projectPath": "D:\\Coding\\quikline\\Quikline\\Quikline.csproj",
+        "packagesPath": "C:\\Users\\Brage\\.nuget\\packages\\",
+        "outputPath": "D:\\Coding\\quikline\\Quikline\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\brage.ingebrigtsen\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Brage\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -55,21 +59,25 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.104/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100-rc.2.23502.2/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj": {
+    "D:\\Coding\\quikline\\TestCLI\\TestCLI.csproj": {
       "version": "0.1.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj",
+        "projectUniqueName": "D:\\Coding\\quikline\\TestCLI\\TestCLI.csproj",
         "projectName": "TestCLI",
-        "projectPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj",
-        "packagesPath": "C:\\Users\\brage.ingebrigtsen\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\obj\\",
+        "projectPath": "D:\\Coding\\quikline\\TestCLI\\TestCLI.csproj",
+        "packagesPath": "C:\\Users\\Brage\\.nuget\\packages\\",
+        "outputPath": "D:\\Coding\\quikline\\TestCLI\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\brage.ingebrigtsen\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Brage\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -83,8 +91,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj": {
-                "projectPath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\Quikline\\Quikline.csproj"
+              "D:\\Coding\\quikline\\Quikline\\Quikline.csproj": {
+                "projectPath": "D:\\Coding\\quikline\\Quikline\\Quikline.csproj"
               }
             }
           }
@@ -114,7 +122,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.104/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100-rc.2.23502.2/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

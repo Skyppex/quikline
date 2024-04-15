@@ -27,14 +27,14 @@ public sealed class CommandAttribute : Attribute
     public bool Version { get; init; }
 }
 
-[AttributeUsage(validOn: AttributeTargets.Field | AttributeTargets.Property)]
+[AttributeUsage(validOn: AttributeTargets.Field)]
 public sealed class OptionAttribute : Attribute
 {
-    public char? Short { get; init; } = null;
-    public string? Long { get; init; } = null;
+    public char Short { get; init; }
+    public string? Long { get; init; }
     public string? Description { get; init; }
     public object? Default { get; init; } = null;
     public bool Required { get; init; }
-    public string ShortPrefix { get; init; } = "-";
-    public string LongPrefix { get; init; } = "--";
+    public char ShortPrefix { get; init; }
+    public string? LongPrefix { get; init; } = null;
 }

@@ -10,3 +10,15 @@ C:\Users\brage.ingebrigtsen\dev\repos\Quikline\Quikline\obj\Debug\net8.0\Quiklin
 C:\Users\brage.ingebrigtsen\dev\repos\Quikline\Quikline\obj\Debug\net8.0\refint\Quikline.dll
 C:\Users\brage.ingebrigtsen\dev\repos\Quikline\Quikline\obj\Debug\net8.0\Quikline.pdb
 C:\Users\brage.ingebrigtsen\dev\repos\Quikline\Quikline\obj\Debug\net8.0\ref\Quikline.dll
+D:\Coding\quikline\Quikline\bin\Debug\net8.0\Quikline.deps.json
+D:\Coding\quikline\Quikline\bin\Debug\net8.0\Quikline.dll
+D:\Coding\quikline\Quikline\bin\Debug\net8.0\Quikline.pdb
+D:\Coding\quikline\Quikline\obj\Debug\net8.0\Quikline.GeneratedMSBuildEditorConfig.editorconfig
+D:\Coding\quikline\Quikline\obj\Debug\net8.0\Quikline.AssemblyInfoInputs.cache
+D:\Coding\quikline\Quikline\obj\Debug\net8.0\Quikline.AssemblyInfo.cs
+D:\Coding\quikline\Quikline\obj\Debug\net8.0\Quikline.csproj.CoreCompileInputs.cache
+D:\Coding\quikline\Quikline\obj\Debug\net8.0\Quikline.sourcelink.json
+D:\Coding\quikline\Quikline\obj\Debug\net8.0\Quikline.dll
+D:\Coding\quikline\Quikline\obj\Debug\net8.0\refint\Quikline.dll
+D:\Coding\quikline\Quikline\obj\Debug\net8.0\Quikline.pdb
+D:\Coding\quikline\Quikline\obj\Debug\net8.0\ref\Quikline.dll

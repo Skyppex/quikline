@@ -7,13 +7,17 @@ public static class Quik
 {
     public static T Parse<T>(string[] args) where T : struct
     {
-        var type = typeof(T);
-        var @interface = ParseInterface(type);
+        Type type = typeof(T);
+        Interface @interface = ParseInterface(type);
 
-        var passedArgs = ParseArgs(args, @interface);
+        Args passedArgs = ParseArgs(args, @interface);
         
         if (passedArgs.Options.Any(
-                o => o.Matches($"{@interface.LongPrefix}help")))
+            o =>
+            {
+                Prefix interfaceLongPrefix = @interface.LongPrefix;
+                return o.Matches($"{interfaceLongPrefix}help");
+            }))
         {
             PrintHelp(@interface);
             Environment.Exit(0);
@@ -23,36 +27,78 @@ public static class Quik
         if (passedArgs.Options.Any(
                 o => o.Matches($"{@interface.LongPrefix}version")))
         {
-            var version = type.Assembly.GetName().Version;
+            Version? version = type.Assembly.GetName().Version;
             Console.Out.Write(version);
             Environment.Exit(0);
             return default;
         }
         
-        var value = Activator.CreateInstance<T>();
+        object value = Activator.CreateInstance<T>();
+
+        foreach (Option option in passedArgs.Options)
+        {
+            string fieldName = option.FieldName;
+            FieldInfo field = type.GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetField)!;
+            
+            if (option.Type == typeof(bool))
+            {
+                field.SetValue(value, true);
+                continue;
+            }
+            
+            field.SetValue(value, option.Value);
+        }
         
-        return value;
+        return (T)value;
     }
 
     private static Interface ParseInterface(Type type)
     {
-        var attributes = type.GetCustomAttributes();
+        IEnumerable<Attribute> attributes = type.GetCustomAttributes();
 
-        if (attributes.SingleOrDefault(a => a is CommandAttribute) is not CommandAttribute commandAttribute)
+        if (attributes.SingleOrDefault(a => a is CommandAttribute) is not CommandAttribute commandAttr)
             throw new InvalidOperationException("The provided type does not have a Command attribute.");
 
-        var @interface = new Interface(commandAttribute);
+        var @interface = new Interface(commandAttr);
         
-        // Add the options and arguments from the fields here.
+        // Add the options and arguments from the fields.
+        FieldInfo[] fields = type.GetFields();
         
-        if (commandAttribute.Version)
+        foreach (FieldInfo field in fields)
+        {
+            if (field.GetCustomAttributes().SingleOrDefault(a => a is OptionAttribute) is not OptionAttribute optionAttr)
+                continue;
+            
+            Short? @short = optionAttr.Short is '\0' ? null
+                : new Short(optionAttr.ShortPrefix.ToPrefix() ?? @interface.ShortPrefix,
+                    new Name(optionAttr.Short.ToString().OrIfEmpty(field.Name.First().ToString())));
+
+            Long @long = optionAttr.Long is null ?
+                new Long(@interface.LongPrefix,
+                    new Name(field.Name.SplitPascalCase().ToKebabCase())) :
+                new Long(optionAttr.LongPrefix.ToPrefix() ?? @interface.LongPrefix,
+                    new Name(optionAttr.Long ?? field.Name.SplitPascalCase().ToKebabCase()));
+
+            var option = new Option(
+                field.Name,
+                @short,
+                @long,
+                field.FieldType,
+                null,
+                optionAttr.Description);
+            
+            @interface.AddOption(option);
+        }
+        
+        // Add generated options.
+        if (commandAttr.Version)
         {
             bool isUsingLowerCaseV = @interface.Options.Contains(
-                new Option(new Short(@interface.ShortPrefix, new Name("v")), Long.Empty),
+                new Option("", new Short(@interface.ShortPrefix, new Name("v")), Long.Empty, typeof(bool), null, ""),
                 new ShortOptionEqualityComparer());
             
             bool isUsingUpperCaseV = @interface.Options.Contains(
-                new Option(new Short(@interface.ShortPrefix, new Name("V")), Long.Empty),
+                new Option("", new Short(@interface.ShortPrefix, new Name("V")), Long.Empty, typeof(bool), null, ""),
                 new ShortOptionEqualityComparer());
 
             Short? shortVersion = (hasv: isUsingLowerCaseV, hasV: isUsingUpperCaseV) switch
@@ -62,15 +108,15 @@ public static class Quik
                 _ => null
             };
             
-            @interface.AddOption(new Option(shortVersion, new Long(@interface.LongPrefix, new Name("version"))));
+            @interface.Options.Insert(0, new Option("", shortVersion, new Long(@interface.LongPrefix, new Name("version")), typeof(bool), null, "Print the version"));
         }
-        
+
         bool isUsingLowerCaseH = @interface.Options.Contains(
-            new Option(new Short(@interface.ShortPrefix, new Name("h")), Long.Empty),
+            new Option("", new Short(@interface.ShortPrefix, new Name("h")), Long.Empty, typeof(bool), null, ""),
             new ShortOptionEqualityComparer());
         
         bool isUsingUpperCaseH = @interface.Options.Contains(
-            new Option(new Short(@interface.ShortPrefix, new Name("H")), Long.Empty),
+            new Option("", new Short(@interface.ShortPrefix, new Name("H")), Long.Empty, typeof(bool), null, ""),
             new ShortOptionEqualityComparer());
         
         Short? shortHelp = (isUsingLowerCaseH, isUsingUpperCaseH) switch
@@ -80,7 +126,7 @@ public static class Quik
             _ => null
         };
 
-        @interface.AddOption(new Option(shortHelp, new Long(@interface.LongPrefix, new Name("help"))));
+        @interface.Options.Insert(0, new Option("", shortHelp, new Long(@interface.LongPrefix, new Name("help")), typeof(bool), null, "Print this help message"));
 
         return @interface;
     }
@@ -89,22 +135,111 @@ public static class Quik
     {
         var parsed = new Args();
 
-        foreach (var arg in args)
+        IEnumerator<string> iterator = args.ToList().GetEnumerator();
+
+        while (true)
         {
-            if (@interface.TryGetOption(arg, out var option))
+            if (!iterator.MoveNext())
+                break;
+
+            string arg = iterator.Current;
+
+            if (arg.StartsWith(@interface.ShortPrefix) && arg[@interface.ShortPrefix.Length].ToString() != @interface.ShortPrefix)
             {
-                parsed.AddOption(option);
+                string shortArgs = arg[@interface.ShortPrefix.Length..];
+
+                foreach (char shortArg in shortArgs)
+                    ParseArg($"{@interface.ShortPrefix}{shortArg}", @interface, parsed, iterator);
+                
                 continue;
             }
             
+            ParseArg(arg, @interface, parsed, iterator);
+        }
+
+        return parsed;
+    }
+
+    private static void ParseArg(
+        string arg,
+        Interface @interface,
+        Args parsed,
+        IEnumerator<string> iterator)
+    {
+        if (!@interface.TryGetOption(arg, out Option option))
+        {
             Console.Error.WriteLine($"Incorrect usage. Unknown option: {arg}");
             Console.Error.Write("Use --help for more information.");
             Environment.Exit(1);
         }
 
-        return parsed;
+        if (option.Type == typeof(bool))
+        {
+            parsed.AddOption(option);
+            return;
+        }
+                
+        if (!iterator.MoveNext())
+        {
+            Console.Error.WriteLine($"Incorrect usage. Expected a value for option {arg}.");
+            Console.Error.Write("Use --help for more information.");
+            Environment.Exit(1);
+        }
+                
+        string value = iterator.Current;
+                
+        if (option.Type == typeof(int))
+        {
+            if (!int.TryParse(value, out int intValue))
+            {
+                Console.Error.WriteLine($"Incorrect usage. Expected an integer value for option {arg}.");
+                Console.Error.Write("Use --help for more information.");
+                Environment.Exit(1);
+            }
+                    
+            option = option with { Value = intValue };
+        }
+        else if (option.Type == typeof(float))
+        {
+            if (!float.TryParse(value, out float floatValue))
+            {
+                Console.Error.WriteLine($"Incorrect usage. Expected a float value for option {arg}.");
+                Console.Error.Write("Use --help for more information.");
+                Environment.Exit(1);
+            }
+                    
+            option = option with { Value = floatValue };
+        }
+        else if (option.Type == typeof(double))
+        {
+            if (!double.TryParse(value, out double doubleValue))
+            {
+                Console.Error.WriteLine($"Incorrect usage. Expected a double value for option {arg}.");
+                Console.Error.Write("Use --help for more information.");
+                Environment.Exit(1);
+            }
+                    
+            option = option with { Value = doubleValue };
+        }
+        else if (option.Type == typeof(char))
+        {
+            if (!char.TryParse(value, out char charValue))
+            {
+                Console.Error.WriteLine($"Incorrect usage. Expected a char value for option {arg}.");
+                Console.Error.Write("Use --help for more information.");
+                Environment.Exit(1);
+            }
+                    
+            option = option with { Value = charValue };
+        }
+        else if (option.Type == typeof(string))
+        {
+            option = option with { Value = value };
+        }
+
+        parsed.AddOption(option);
     }
-    
+
     private static void PrintHelp(Interface @interface)
     {
         if (@interface.Description is not null)
@@ -112,7 +247,22 @@ public static class Quik
             Console.Out.WriteLine(@interface.Description);
             Console.Out.WriteLine("");
         }
+
+        ICollection<Option> options = @interface.Options;
+        ICollection<Argument> arguments = @interface.Arguments;
         
-        Console.Out.Write($"USAGE: {@interface.ProgramName}");
+        string argumentString = string.Join(" ", arguments.Select(a => a.Name));
+        
+        Console.Out.Write($"USAGE: {@interface.ProgramName} {{options}} {argumentString}");
+
+        if (options.Count > 0)
+        {
+            Console.Out.WriteLine("");
+            Console.Out.WriteLine("");
+            Console.Out.WriteLine("Options:");
+            
+            foreach (Option option in options)
+                Console.Out.WriteLine($"{option}");
+        }
     }
 }

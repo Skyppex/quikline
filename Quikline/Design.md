@@ -25,11 +25,11 @@ Commands only support certain types:
 
 #### MVP
 - `bool`
+- `int`
+- `float`
+- `double`
 - `char`
 - `string`
-- `int`
-- `double`
-- `float`
 
 #### Nice to have
 - `uint`

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "yo67+hbyMnMINPtJ64WSAoEVagmctCxTeBhGDalsPUh0fSXxs2RBtjeUNOU+I+KuYrtKm2qKR5l6E8BfQ1sxuA==",
+  "dgSpecHash": "vQWZI8zf3NKhqFUnmOzCIeDPqxYPt3Usu1Ex2+8wj9AynHi2Glgo2OQ53q8f9Ypq9jTt1A3nKSu4VqFcKzOqMg==",
   "success": true,
-  "projectFilePath": "C:\\Users\\brage.ingebrigtsen\\dev\\repos\\Quikline\\TestCLI\\TestCLI.csproj",
+  "projectFilePath": "D:\\Coding\\quikline\\TestCLI\\TestCLI.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }
