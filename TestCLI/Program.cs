@@ -31,11 +31,11 @@ public readonly struct Args
     [Option(ShortPrefix = '+', Short = 's', Description = "Case sensitive.")]
     public readonly bool CaseSensitive;
     
-    [Argument(Description = "The other file to process.", Optional = true)]
-    public readonly string OtherFile;
-
     [Argument(Description = "The file to process.", Optional = false)]
     public readonly string File;
+
+    [Argument(Description = "The other file to process.", Optional = true)]
+    public readonly string OtherFile;
 
     [Rest(Description = "The rest of the arguments.")]
     public readonly string Rest;
