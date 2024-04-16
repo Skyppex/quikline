@@ -40,5 +40,5 @@ Now that you've defined your commands structure,
 all you have to do is let Quikline do the magic:
 
 ```csharp
-var myCommand = Quik.Parse<MyCommand>(args);
+var myCommand = Quik.Parse<MyCommand>();
 ```

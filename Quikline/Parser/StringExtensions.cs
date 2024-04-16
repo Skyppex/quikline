@@ -4,12 +4,28 @@ namespace Quikline.Parser;
 
 internal static class TypeExtensions
 {
-    public static string GetUsageName(this Type type)
+    public static void PrintUsageName(this Type type)
     {
         if (type.IsEnum)
-            return $"({string.Join('|', Enum.GetNames(type)).ToLower()})";
+        {
+            var names = Enum.GetNames(type);
+            
+            for (int i = 0; i < names.Length; i++)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                Console.Out.Write(names[i].SplitPascalCase().ToKebabCase());
+                
+                if (i < names.Length - 1)
+                {
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.Out.Write("|");
+                }
+            }
+            
+            return;
+        }
 
-        return type.Name.ToLower();
+        Console.Out.Write(type.Name.SplitPascalCase().ToKebabCase());
     }
 }
 
@@ -35,12 +51,12 @@ internal static class StringExtensions
 
         return result.ToArray();
     }
-    
+
     public static string[] SplitKebabCase(this string value) => value.Split('-');
     public static string[] SplitSnakeCase(this string value) => value.Split('_');
-    
+
     public static string[] SplitCamelCase(this string value) => value.SplitPascalCase();
-    
+
     public static string ToPascalCase(this string[] words)
     {
         var result = new StringBuilder();
@@ -56,13 +72,13 @@ internal static class StringExtensions
 
     public static string ToKebabCase(this string[] words) =>
         string.Join('-', words.Select(w => w.ToLower()));
-    
+
     public static string ToUpperKebabCase(this string[] words) =>
         string.Join('-', words.Select(w => w.ToUpper()));
 
     public static string ToSnakeCase(this string[] words) =>
         string.Join('_', words.Select(w => w.ToLower()));
-    
+
     public static string ToScreamingSnakeCase(this string[] words) =>
         string.Join('_', words.Select(w => w.ToUpper()));
 
@@ -80,7 +96,7 @@ internal static class StringExtensions
 
         return result.ToString();
     }
-    
+
     public static string OrIfEmpty(this string value, string defaultValue) =>
         string.IsNullOrEmpty(value) ? defaultValue : value;
 }

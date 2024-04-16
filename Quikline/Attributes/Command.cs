@@ -12,7 +12,7 @@ public sealed class CommandAttribute : Attribute
     /// The prefix for the short names of the options. If not provided, the default prefix is `-`.
     /// </summary>
     public string ShortPrefix { get; init; } = "-";
-    
+
     /// <summary>
     /// The prefix for the short names of the options. If not provided, the default prefix is `-`.
     /// </summary>
@@ -30,11 +30,27 @@ public sealed class CommandAttribute : Attribute
 [AttributeUsage(validOn: AttributeTargets.Field)]
 public sealed class OptionAttribute : Attribute
 {
+    public char ShortPrefix { get; init; }
     public char Short { get; init; }
+    public string? LongPrefix { get; init; }
     public string? Long { get; init; }
     public string? Description { get; init; }
-    public object? Default { get; init; } = null;
+    public object? Default { get; init; }
     public bool Required { get; init; }
-    public char ShortPrefix { get; init; }
-    public string? LongPrefix { get; init; } = null;
+}
+
+[AttributeUsage(validOn: AttributeTargets.Field)]
+public sealed class ArgumentAttribute : Attribute
+{
+    public string? Name { get; init; }
+    public string? Description { get; init; }
+    public object? Default { get; init; }
+    public bool Optional { get; init; }
+}
+
+[AttributeUsage(validOn: AttributeTargets.Field)]
+public sealed class RestAttribute : Attribute
+{
+    public string? Name { get; init; }
+    public string? Description { get; init; }
 }
