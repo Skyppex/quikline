@@ -36,12 +36,12 @@ Commands only support certain types:
 - `uint`
 - `long`
 - `ulong`
-- `Guid`
-- `DateTime`
-- `TimeSpan`
-- `DateOnly`
-- `TimeOnly`
-- `Uri`
+- `guid`
+- `date-time`
+- `time-span`
+- `date-only`
+- `time-only`
+- `url`
 
 ## Attributes
 
@@ -94,7 +94,6 @@ Commands only support certain types:
 [Command(Description="My command line tool")]
 [Group(Name="logging", Required=false, Multiple=Multiple.OnlyOne)]
 public readonly struct MyCommand {
-    [Flatten]
     public readonly FileArgs FileArgs;
     
     [Option(Short='v', Long="verbose", Description="Enable verbose output", Groups=["logging"])]
