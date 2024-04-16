@@ -108,7 +108,7 @@ internal readonly record struct Argument(
         Console.ForegroundColor = ConsoleColor.Gray;
 
         if (IsRest)
-            Console.Out.Write("...");
+            Console.Out.Write("..");
         
         Console.ForegroundColor = ConsoleColor.DarkCyan;
 

@@ -185,6 +185,10 @@ public static class Quik
                 null,
                 "Print this help message"));
 
+        if (@interface.Arguments.Count(a => a.IsRest) > 1)
+            throw new InvalidProgramException(
+                "Incorrect setup. Only one field can have the Rest attribute.");
+        
         @interface.Arguments.Sort(new ArgumentComparer());
 
         return @interface;
@@ -685,7 +689,7 @@ public static class Quik
                 Console.Out.Write("<");
 
                 if (argument.IsRest)
-                    Console.Out.Write("...");
+                    Console.Out.Write("..");
                 
                 Console.ForegroundColor = ConsoleColor.DarkCyan;
                 Console.Out.Write(argument.Name);
