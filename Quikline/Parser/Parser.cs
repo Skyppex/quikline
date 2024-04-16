@@ -185,9 +185,17 @@ public static class Quik
                 null,
                 "Print this help message"));
 
-        if (@interface.Arguments.Count(a => a.IsRest) > 1)
+        if (@interface.Arguments.Count(a => a.IsRest) > 2)
             throw new InvalidProgramException(
-                "Incorrect setup. Only one field can have the Rest attribute.");
+                "Incorrect setup. At most two fields can have the Rest attribute. One with a separator and one without.");
+
+        if (@interface.Arguments.Count(a => a is { IsRest: true, RestSeparator: null }) > 1)
+            throw new InvalidProgramException(
+                "Incorrect setup. At most two fields can have the Rest attribute. One with a separator and one without.");
+        
+        if (@interface.Arguments.Count(a => a is { IsRest: true, RestSeparator: not null }) > 1)
+            throw new InvalidProgramException(
+                "Incorrect setup. At most two fields can have the Rest attribute. One with a separator and one without.");
         
         @interface.Arguments.Sort(new ArgumentComparer());
 
@@ -301,7 +309,8 @@ public static class Quik
             field.FieldType,
             null,
             restAttr.Description,
-            IsRest: true);
+            IsRest: true,
+            RestSeparator: restAttr.Separator);
 
         @interface.AddArgument(argument);
     }
@@ -325,7 +334,7 @@ public static class Quik
                 string shortArgs = arg[@interface.ShortPrefix.Length..];
 
                 foreach (char shortArg in shortArgs)
-                    if (@interface.TryGetOption(shortArg.ToString(), out Option option))
+                    if (@interface.TryGetOption($"{@interface.ShortPrefix}{shortArg}", out Option option))
                         ParseOption(shortArg.ToString(), parsed, argIterator, option);
 
                 continue;
@@ -369,10 +378,37 @@ public static class Quik
 
         if (argument.IsRest)
         {
+            Argument? separatedArgument = null;
+            
+            if (interfaceArgumentIterator.MoveNext())
+                separatedArgument = interfaceArgumentIterator.Current;
+            
             List<string> restList = [value];
 
             while (argIterator.MoveNext())
-                restList.Add(argIterator.Current);
+            {
+                string current = argIterator.Current;
+
+                if (separatedArgument is not null &&
+                    separatedArgument.Value.RestSeparator == current)
+                {
+                    List<string> separatedRestList = [];
+
+                    while (argIterator.MoveNext())
+                        separatedRestList.Add(argIterator.Current);
+
+                    separatedArgument = separatedArgument.Value with
+                    {
+                        Value = string.Join(" ", separatedRestList)
+                    };
+
+                    parsed.AddArgument(separatedArgument.Value);
+
+                    break;
+                }
+                
+                restList.Add(current);
+            }
 
             argument = argument with
             {
@@ -685,10 +721,15 @@ public static class Quik
             foreach (Argument argument in arguments)
             {
                 Console.Out.Write(" ");
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                
+                if (argument is { IsRest: true, RestSeparator: not null })
+                    Console.Out.Write("-- ");
+                
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.Out.Write("<");
 
-                if (argument.IsRest)
+                if (argument is { IsRest: true, RestSeparator: null })
                     Console.Out.Write("..");
                 
                 Console.ForegroundColor = ConsoleColor.DarkCyan;

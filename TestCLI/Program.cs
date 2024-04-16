@@ -39,6 +39,9 @@ public readonly struct Args
 
     [Rest(Description = "The rest of the arguments.")]
     public readonly string Rest;
+    
+    [Rest(Description = "The rest of the arguments.", Separator = "--")]
+    public readonly string Rest2;
 
     public override string ToString()
     {

@@ -100,7 +100,8 @@ internal readonly record struct Argument(
     Type Type,
     object? Value,
     string? Description,
-    bool IsRest = false)
+    bool IsRest = false,
+    string? RestSeparator = null)
 {
     public void PrintUsage()
     {
@@ -108,7 +109,17 @@ internal readonly record struct Argument(
         Console.ForegroundColor = ConsoleColor.Gray;
 
         if (IsRest)
-            Console.Out.Write("..");
+        {
+            if (RestSeparator is not null)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.Out.Write($"{RestSeparator} ");
+            }
+            else
+            {
+                Console.Out.Write("..");
+            }
+        }
         
         Console.ForegroundColor = ConsoleColor.DarkCyan;
 
@@ -146,12 +157,14 @@ internal sealed class ArgumentComparer : IComparer<Argument>
 {
     public int Compare(Argument x, Argument y)
     {
-        return (x.Optional, y.Optional, x.IsRest, y.IsRest) switch
+        return (x.Optional, y.Optional, x.IsRest, y.IsRest, x.RestSeparator is not null, y.RestSeparator is not null) switch
         {
-            (false, true, false, false) => -1,
-            (true, false, false, false) => 1,
-            (_, _, true, false) => 1,
-            (_, _, false, true) => -1,
+            (false, true, false, false, false, false) => -1,
+            (true, false, false, false, false, false) => 1,
+            (_, _, true, false, _, _) => 1,
+            (_, _, false, true, _, _) => -1,
+            (_, _, true, true, true, false) => 1,
+            (_, _, true, true, false, true) => -1,
             _ => 0,
         };
     }
