@@ -40,7 +40,7 @@ public readonly struct Args
     [Rest(Description = "The rest of the arguments.")]
     public readonly string Rest;
     
-    [Rest(Description = "The rest of the arguments.", Separator = "--")]
+    [Rest(Description = "The rest of the rest of the arguments.", Separator = "--")]
     public readonly string Rest2;
 
     public override string ToString()
@@ -54,7 +54,7 @@ public readonly struct Args
         foreach (FieldInfo field in fields)
             builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
 
-        builder.Append("}");
+        builder.Append('}');
 
         return builder.ToString();
     }
