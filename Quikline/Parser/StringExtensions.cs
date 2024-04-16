@@ -10,7 +10,7 @@ internal static class TypeExtensions
         {
             string[] names = Enum.GetNames(type);
             
-            for (int i = 0; i < names.Length; i++)
+            for (var i = 0; i < names.Length; i++)
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Out.Write(names[i].SplitPascalCase().ToKebabCase());
@@ -36,7 +36,7 @@ internal static class StringExtensions
         var result = new List<string>();
         var currentWord = new StringBuilder();
 
-        foreach (char c in value)
+        foreach (var c in value)
         {
             if (char.IsUpper(c) && currentWord.Length > 0)
             {
@@ -61,7 +61,7 @@ internal static class StringExtensions
     {
         var result = new StringBuilder();
 
-        foreach (string word in words)
+        foreach (var word in words)
         {
             result.Append(char.ToUpper(word[0]));
             result.Append(word[1..]);
@@ -88,7 +88,7 @@ internal static class StringExtensions
 
         result.Append(words[0].ToLower());
 
-        for (int i = 1; i < words.Length; i++)
+        for (var i = 1; i < words.Length; i++)
         {
             result.Append(char.ToUpper(words[i][0]));
             result.Append(words[i][1..]);

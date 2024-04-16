@@ -1,6 +1,6 @@
 ﻿using Quikline.Attributes;
 
-namespace Quikline.Parser;
+namespace Quikline.Parser.Models;
 
 internal struct Interface(CommandAttribute commandAttribute)
 {
@@ -36,6 +36,7 @@ internal struct Interface(CommandAttribute commandAttribute)
 }
 
 internal readonly record struct Option(
+    bool Passed,
     string FieldName,
     bool Required,
     Short? Short,
@@ -45,6 +46,7 @@ internal readonly record struct Option(
     string? Description)
 {
     public static Option ShortOnly(Short @short) => new Option(
+        false,
         "",
         false,
         @short,
@@ -101,6 +103,7 @@ internal readonly record struct Option(
 }
 
 internal readonly record struct Argument(
+    bool Passed,
     string FieldName,
     bool Optional,
     string Name,
@@ -167,4 +170,25 @@ internal sealed class ArgumentComparer : IComparer<Argument>
             _ => 0,
         };
     }
+}
+
+internal static class ArgExtensions
+{
+    public static Option Passed(this Option option, object? value)
+    {
+        return option with
+        {
+            Passed = true,
+            Value = value,
+        };
+    }
+    
+    public static Argument Passed(this Argument argument, object? value)
+    {
+        return argument with
+        {
+            Passed = true,
+            Value = value,
+        };
+    } 
 }

@@ -1,4 +1,6 @@
-﻿namespace Quikline.Parser;
+﻿using Quikline.Parser.Models;
+
+namespace Quikline.Parser;
 
 internal static class Help
 {
@@ -10,8 +12,8 @@ internal static class Help
             Console.Out.WriteLine("");
         }
 
-        List<Option> options = @interface.Options;
-        List<Argument> arguments = @interface.Arguments;
+        var options = @interface.Options;
+        var arguments = @interface.Arguments;
 
         PrintUsage(@interface);
 
@@ -27,9 +29,9 @@ internal static class Help
             {
                 Console.Out.WriteLine(":");
 
-                for (int i = 0; i < arguments.Count; i++)
+                for (var i = 0; i < arguments.Count; i++)
                 {
-                    Argument argument = arguments[i];
+                    var argument = arguments[i];
                     argument.PrintUsage();
 
                     if (i < arguments.Count - 1)
@@ -51,9 +53,9 @@ internal static class Help
         {
             Console.Out.WriteLine(":");
 
-            for (int i = 0; i < options.Count; i++)
+            for (var i = 0; i < options.Count; i++)
             {
-                Option option = options[i];
+                var option = options[i];
                 option.PrintUsage();
 
                 if (i < options.Count - 1)
@@ -81,13 +83,13 @@ internal static class Help
             }
         }
 
-        List<Argument> arguments = @interface.Arguments;
+        var arguments = @interface.Arguments;
 
         if (arguments.Count > 0)
         {
             using (new Color(ConsoleColor.Gray))
             {
-                foreach (Argument argument in arguments)
+                foreach (var argument in arguments)
                 {
                     Console.Out.Write(" ");
                     

@@ -1,4 +1,4 @@
-﻿namespace Quikline.Parser;
+﻿namespace Quikline.Parser.Models;
 
 internal readonly record struct Prefix(string Value)
 {
@@ -50,6 +50,12 @@ internal sealed class OptionNameEqualityComparer : IEqualityComparer<Option>
         Nullable.Equals(x.Short, y.Short) && x.Long.Equals(y.Long);
 
     public int GetHashCode(Option obj) => HashCode.Combine(obj.Short, obj.Long);
+}
+
+internal sealed class ArgumentNameEqualityComparer : IEqualityComparer<Argument>
+{
+    public bool Equals(Argument x, Argument y) => x.Name == y.Name;
+    public int GetHashCode(Argument obj) => obj.Name.GetHashCode();
 }
 
 internal static class Extensions

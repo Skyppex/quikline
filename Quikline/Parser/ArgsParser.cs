@@ -1,4 +1,6 @@
-﻿namespace Quikline.Parser;
+﻿using Quikline.Parser.Models;
+
+namespace Quikline.Parser;
 
 internal static class ArgsParser
 {
@@ -14,21 +16,31 @@ internal static class ArgsParser
             if (!argIterator.MoveNext())
                 break;
 
-            string arg = argIterator.Current;
+            var arg = argIterator.Current;
 
             if (!arg.StartsWith(@interface.LongPrefix) && arg.StartsWith(@interface.ShortPrefix))
             {
-                string shortArgs = arg[@interface.ShortPrefix.Length..];
+                var shortArgs = arg[@interface.ShortPrefix.Length..];
 
-                foreach (char shortArg in shortArgs)
-                    if (@interface.TryGetOption($"{@interface.ShortPrefix}{shortArg}", out Option option))
+                foreach (var shortArg in shortArgs)
+                    if (@interface.TryGetOption(
+                            $"{@interface.ShortPrefix}{shortArg}",
+                            out var option))
                         ParseOption(shortArg.ToString(), parsed, argIterator, option);
 
                 continue;
             }
-            
+
             ParseArg(arg, @interface, parsed, argIterator, interfaceArgumentIterator);
         }
+
+        foreach (var option in @interface.Options.Where(
+                     o => !parsed.Options.Contains(o, new OptionNameEqualityComparer())))
+            parsed.AddOption(option);
+
+        foreach (var argument in @interface.Arguments.Where(
+                     o => !parsed.Arguments.Contains(o, new ArgumentNameEqualityComparer())))
+            parsed.AddArgument(argument);
 
         return parsed;
     }
@@ -40,7 +52,7 @@ internal static class ArgsParser
         IEnumerator<string> argIterator,
         IEnumerator<Argument> interfaceArgumentIterator)
     {
-        if (@interface.TryGetOption(arg, out Option option))
+        if (@interface.TryGetOption(arg, out var option))
         {
             ParseOption(arg, parsed, argIterator, option);
             return;
@@ -62,22 +74,22 @@ internal static class ArgsParser
             Environment.Exit(1);
         }
 
-        string value = argIterator.Current;
+        var value = argIterator.Current;
 
-        Argument argument = interfaceArgumentIterator.Current;
+        var argument = interfaceArgumentIterator.Current;
 
         if (argument.IsRest)
         {
             Argument? separatedArgument = null;
-            
+
             if (interfaceArgumentIterator.MoveNext())
                 separatedArgument = interfaceArgumentIterator.Current;
-            
+
             List<string> restList = [value];
 
             while (argIterator.MoveNext())
             {
-                string current = argIterator.Current;
+                var current = argIterator.Current;
 
                 if (separatedArgument is not null &&
                     separatedArgument.Value.RestSeparator == current)
@@ -87,24 +99,18 @@ internal static class ArgsParser
                     while (argIterator.MoveNext())
                         separatedRestList.Add(argIterator.Current);
 
-                    separatedArgument = separatedArgument.Value with
-                    {
-                        Value = string.Join(" ", separatedRestList)
-                    };
+                    separatedArgument =
+                        separatedArgument.Value.Passed(string.Join(" ", separatedRestList));
 
                     parsed.AddArgument(separatedArgument.Value);
 
                     break;
                 }
-                
+
                 restList.Add(current);
             }
 
-            argument = argument with
-            {
-                Value = string.Join(" ", restList)
-            };
-
+            argument = argument.Passed(string.Join(" ", restList));
             parsed.AddArgument(argument);
 
             return;
@@ -112,7 +118,7 @@ internal static class ArgsParser
 
         if (argument.Type == typeof(int))
         {
-            if (!int.TryParse(value, out int intValue))
+            if (!int.TryParse(value, out var intValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected an integer value for argument {arg}.");
@@ -121,14 +127,11 @@ internal static class ArgsParser
                 Environment.Exit(1);
             }
 
-            argument = argument with
-            {
-                Value = intValue
-            };
+            argument = argument.Passed(intValue);
         }
         else if (argument.Type == typeof(float))
         {
-            if (!float.TryParse(value, out float floatValue))
+            if (!float.TryParse(value, out var floatValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected a float value for argument {arg}.");
@@ -137,14 +140,11 @@ internal static class ArgsParser
                 Environment.Exit(1);
             }
 
-            argument = argument with
-            {
-                Value = floatValue
-            };
+            argument = argument.Passed(floatValue);
         }
         else if (argument.Type == typeof(double))
         {
-            if (!double.TryParse(value, out double doubleValue))
+            if (!double.TryParse(value, out var doubleValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected a double value for argument {arg}.");
@@ -153,14 +153,11 @@ internal static class ArgsParser
                 Environment.Exit(1);
             }
 
-            argument = argument with
-            {
-                Value = doubleValue
-            };
+            argument = argument.Passed(doubleValue);
         }
         else if (argument.Type == typeof(char))
         {
-            if (!char.TryParse(value, out char charValue))
+            if (!char.TryParse(value, out var charValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected a char value for argument {arg}.");
@@ -169,21 +166,15 @@ internal static class ArgsParser
                 Environment.Exit(1);
             }
 
-            argument = argument with
-            {
-                Value = charValue
-            };
+            argument = argument.Passed(charValue);
         }
         else if (argument.Type == typeof(string))
         {
-            argument = argument with
-            {
-                Value = value
-            };
+            argument = argument.Passed(value);
         }
         else if (argument.Type.IsEnum)
         {
-            if (!Enum.TryParse(argument.Type, value, ignoreCase: true, out object? enumValue))
+            if (!Enum.TryParse(argument.Type, value, ignoreCase: true, out var enumValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected an enum value for argument {arg}.");
@@ -192,10 +183,7 @@ internal static class ArgsParser
                 Environment.Exit(1);
             }
 
-            argument = argument with
-            {
-                Value = enumValue
-            };
+            argument = argument.Passed(enumValue);
         }
 
         parsed.AddArgument(argument);
@@ -216,7 +204,7 @@ internal static class ArgsParser
 
         if (option.Type == typeof(bool))
         {
-            parsed.AddOption(option);
+            parsed.AddOption(option.Passed(true));
 
             return;
         }
@@ -228,11 +216,11 @@ internal static class ArgsParser
             Environment.Exit(1);
         }
 
-        string value = argIterator.Current;
+        var value = argIterator.Current;
 
         if (option.Type == typeof(int))
         {
-            if (!int.TryParse(value, out int intValue))
+            if (!int.TryParse(value, out var intValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected an integer value for option {arg}.");
@@ -241,14 +229,11 @@ internal static class ArgsParser
                 Environment.Exit(1);
             }
 
-            option = option with
-            {
-                Value = intValue
-            };
+            option = option.Passed(intValue);
         }
         else if (option.Type == typeof(float))
         {
-            if (!float.TryParse(value, out float floatValue))
+            if (!float.TryParse(value, out var floatValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected a float value for option {arg}.");
@@ -257,14 +242,11 @@ internal static class ArgsParser
                 Environment.Exit(1);
             }
 
-            option = option with
-            {
-                Value = floatValue
-            };
+            option = option.Passed(floatValue);
         }
         else if (option.Type == typeof(double))
         {
-            if (!double.TryParse(value, out double doubleValue))
+            if (!double.TryParse(value, out var doubleValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected a double value for option {arg}.");
@@ -273,14 +255,11 @@ internal static class ArgsParser
                 Environment.Exit(1);
             }
 
-            option = option with
-            {
-                Value = doubleValue
-            };
+            option = option.Passed(doubleValue);
         }
         else if (option.Type == typeof(char))
         {
-            if (!char.TryParse(value, out char charValue))
+            if (!char.TryParse(value, out var charValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected a char value for option {arg}.");
@@ -289,21 +268,19 @@ internal static class ArgsParser
                 Environment.Exit(1);
             }
 
-            option = option with
-            {
-                Value = charValue
-            };
+            option = option.Passed(charValue);
         }
         else if (option.Type == typeof(string))
         {
-            option = option with
-            {
-                Value = value
-            };
+            option = option.Passed(value);
         }
         else if (option.Type.IsEnum)
         {
-            if (!Enum.TryParse(option.Type, value.SplitKebabCase().ToPascalCase(), ignoreCase: true, out object? enumValue))
+            if (!Enum.TryParse(
+                    option.Type,
+                    value.SplitKebabCase().ToPascalCase(),
+                    ignoreCase: true,
+                    out var enumValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected an enum value for option {arg}.");
@@ -312,10 +289,7 @@ internal static class ArgsParser
                 Environment.Exit(1);
             }
 
-            option = option with
-            {
-                Value = enumValue
-            };
+            option = option.Passed(enumValue);
         }
 
         parsed.AddOption(option);

@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Quikline.Attributes;
+using Quikline.Parser.Models;
 
 namespace Quikline.Parser;
 
@@ -36,7 +37,7 @@ internal static class InterfaceParser
         // Add the options and arguments from the fields.
         FieldInfo[] fields = type.GetFields();
 
-        foreach (FieldInfo field in fields)
+        foreach (var field in fields)
         {
             if (field.FieldType.GetCustomAttribute(typeof(ArgsAttribute)) is not null)
             {
@@ -74,14 +75,27 @@ internal static class InterfaceParser
                 ParseInterfaceRestArgument(restAttr, @interface, field);
         }
 
+        var distinctShortNames = @interface.Options.Distinct(new ShortOptionEqualityComparer()).ToList();
+
+        if (distinctShortNames.Count <
+            @interface.Options.Count)
+        {
+            var duplicates = @interface.Options.GroupBy(o => o.Short)
+                .Where(g => g.Count() > 1)
+                .Select(g => $"{string.Join(" & ", g.Select(o => o.FieldName))} for {g.Key}");
+            
+            throw new InvalidProgramException("Incorrect setup. Duplicate short names options found:\n" +
+                                              string.Join("\n", duplicates));
+        }
+
         // Add generated options.
         if (commandAttr!.Version)
         {
-            bool isUsingLowerCaseV = @interface.Options.Contains(
+            var isUsingLowerCaseV = @interface.Options.Contains(
                 Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("v"))),
                 new ShortOptionEqualityComparer());
 
-            bool isUsingUpperCaseV = @interface.Options.Contains(
+            var isUsingUpperCaseV = @interface.Options.Contains(
                 Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("V"))),
                 new ShortOptionEqualityComparer());
 
@@ -95,6 +109,7 @@ internal static class InterfaceParser
             @interface.Options.Insert(
                 0,
                 new Option(
+                    false,
                     "",
                     false,
                     shortVersion,
@@ -106,11 +121,11 @@ internal static class InterfaceParser
 
         if (argsAttr is null)
         {
-            bool isUsingLowerCaseH = @interface.Options.Contains(
+            var isUsingLowerCaseH = @interface.Options.Contains(
                 Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("h"))),
                 new ShortOptionEqualityComparer());
 
-            bool isUsingUpperCaseH = @interface.Options.Contains(
+            var isUsingUpperCaseH = @interface.Options.Contains(
                 Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("H"))),
                 new ShortOptionEqualityComparer());
 
@@ -124,6 +139,7 @@ internal static class InterfaceParser
             @interface.Options.Insert(
                 0,
                 new Option(
+                    false,
                     "",
                     false,
                     shortHelp,
@@ -161,7 +177,7 @@ internal static class InterfaceParser
                 optionAttr.ShortPrefix.ToPrefix() ?? @interface.ShortPrefix,
                 new Name(optionAttr.Short.ToString().OrIfEmpty(field.Name.First().ToString())));
 
-        Long @long = (optionAttr.LongPrefix, optionAttr.Long) switch
+        var @long = (optionAttr.LongPrefix, optionAttr.Long) switch
         {
             (null, null) => new Long(
                 @interface.LongPrefix,
@@ -178,12 +194,13 @@ internal static class InterfaceParser
         };
 
         var option = new Option(
+            false,
             field.Name,
             optionAttr.Required,
             @short,
             @long,
             field.FieldType,
-            null,
+            optionAttr.Default,
             optionAttr.Description);
 
         if (field.FieldType.IsEnum)
@@ -211,9 +228,10 @@ internal static class InterfaceParser
         Interface @interface,
         FieldInfo field)
     {
-        string name = argumentAttr.Name ?? field.Name.SplitPascalCase().ToKebabCase();
+        var name = argumentAttr.Name ?? field.Name.SplitPascalCase().ToKebabCase();
 
         var argument = new Argument(
+            false,
             field.Name,
             argumentAttr.Optional,
             name,
@@ -251,6 +269,7 @@ internal static class InterfaceParser
                 $"Incorrect setup. Field {field.Name} with Rest attribute must be of type string.");
 
         var argument = new Argument(
+            false,
             field.Name,
             false,
             restAttr.Name ?? field.Name.SplitPascalCase().ToKebabCase(),

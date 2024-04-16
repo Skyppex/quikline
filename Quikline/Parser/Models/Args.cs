@@ -1,4 +1,4 @@
-﻿namespace Quikline.Parser;
+﻿namespace Quikline.Parser.Models;
 
 internal class Args
 {
