@@ -27,6 +27,12 @@ internal struct Interface(CommandAttribute commandAttribute)
 
         return option != default;
     }
+    
+    public void Merge(Interface @interface)
+    {
+        Options.AddRange(@interface.Options);
+        Arguments.AddRange(@interface.Arguments);
+    }
 }
 
 internal readonly record struct Option(
@@ -59,36 +65,37 @@ internal readonly record struct Option(
     public void PrintUsage()
     {
         Console.Out.Write("  ");
-        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        using (new Help.Color(ConsoleColor.DarkCyan))
+        {
+            if (Short != null)
+            {
+                Console.Out.Write(Short);
+                using (new Help.Color(ConsoleColor.Gray))
+                    Console.Out.Write(", ");
+                Console.Out.Write(Long);
+            }
+            else
+                Console.Out.Write(Long);
 
-        if (Short != null)
-        {
-            Console.Out.Write(Short);
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Out.Write(", ");
-            Console.ForegroundColor = ConsoleColor.DarkCyan;
-            Console.Out.Write(Long);
-        }
-        else
-        {
-            Console.Out.Write(Long);
-        }
+            if (Type != typeof(bool))
+            {
+                using (new Help.Color(ConsoleColor.Gray))
+                {
+                    Console.Out.Write(" <");
+                    using (new Help.Color(ConsoleColor.Blue))
+                        Type.PrintUsageName();
+                    Console.Out.Write(">");
+                }
+            }
 
-        if (Type != typeof(bool))
-        {
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Out.Write(" <");
-            Console.ForegroundColor = ConsoleColor.DarkBlue;
-            Type.PrintUsageName();
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Out.Write(">");
-        }
-
-        if (Description != null)
-        {
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Out.Write(" - ");
-            Console.Out.Write(Description);
+            if (Description != null)
+            {
+                using (new Help.Color(ConsoleColor.Gray))
+                {
+                    Console.Out.Write(" - ");
+                    Console.Out.Write(Description);
+                }
+            }
         }
     }
 }
@@ -106,48 +113,40 @@ internal readonly record struct Argument(
     public void PrintUsage()
     {
         Console.Out.Write("  ");
-        Console.ForegroundColor = ConsoleColor.Gray;
 
         if (IsRest)
         {
             if (RestSeparator is not null)
-            {
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.Out.Write($"{RestSeparator} ");
-            }
+                using (new Help.Color(ConsoleColor.DarkYellow))
+                    Console.Out.Write($"{RestSeparator} ");
             else
-            {
                 Console.Out.Write("..");
-            }
         }
         
-        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        using (new Help.Color(ConsoleColor.DarkCyan))
+            Console.Out.Write(Name);
 
-        Console.Out.Write(Name);
-
-        Console.ForegroundColor = ConsoleColor.Gray;
-        Console.Out.Write(" <");
-
-        Console.ForegroundColor = ConsoleColor.DarkBlue;
-        Type.PrintUsageName();
-        Console.ForegroundColor = ConsoleColor.Gray;
-        Console.Out.Write(">");
-
-        if (Description != null || Optional)
+        using (new Help.Color(ConsoleColor.Gray))
         {
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Out.Write(" -");
+            Console.Out.Write(" <");
+            using (new Help.Color(ConsoleColor.Blue))
+                Type.PrintUsageName();
+            Console.Out.Write(">");
 
-            if (Description != null)
-                Console.Out.Write($" {Description}");
-
-            if (Optional)
+            if (Description != null || Optional)
             {
-                Console.Out.Write(" (");
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.Out.Write("optional");
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.Out.Write(")");
+                Console.Out.Write(" -");
+
+                if (Description != null)
+                    Console.Out.Write($" {Description}");
+
+                if (Optional)
+                {
+                    Console.Out.Write(" (");
+                    using (new Help.Color(ConsoleColor.DarkYellow))
+                        Console.Out.Write("optional");
+                    Console.Out.Write(")");
+                }
             }
         }
     }

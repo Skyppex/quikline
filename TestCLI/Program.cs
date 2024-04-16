@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
 
 using Quikline.Attributes;
@@ -9,18 +8,13 @@ var a = Quik.Parse<Args>();
 
 Console.WriteLine(a);
 
+// ReSharper disable UnassignedReadonlyField
+
 [Command(Version = true, Description = "A test CLI program.")]
-[SuppressMessage("ReSharper", "UnassignedReadonlyField")]
 public readonly struct Args
 {
-    [Option(Short = 'v', Description = "Enable verbose output.")]
-    public readonly bool Verbose;
-
     [Option(Short = 'f', Description = "Force the operation.")]
     public readonly bool Force;
-
-    [Option(Short = 'l', Description = "LogLevel.", Default = "info")]
-    public readonly LogLevel LogLevel;
 
     [Option(Short = 'n', Description = "Name.")]
     public readonly string Name;
@@ -31,7 +25,7 @@ public readonly struct Args
     [Option(ShortPrefix = '+', Short = 's', Description = "Case sensitive.")]
     public readonly bool CaseSensitive;
     
-    [Argument(Description = "The file to process.", Optional = false)]
+    [Argument(Description = "The file to process.")]
     public readonly string File;
 
     [Argument(Description = "The other file to process.", Optional = true)]
@@ -42,6 +36,8 @@ public readonly struct Args
     
     [Rest(Description = "The rest of the rest of the arguments.", Separator = "--")]
     public readonly string Rest2;
+    
+    public readonly LoggingArgs LoggingArgs;
 
     public override string ToString()
     {
@@ -58,6 +54,16 @@ public readonly struct Args
 
         return builder.ToString();
     }
+}
+
+[Args]
+public readonly struct LoggingArgs
+{
+    [Option(Short = 'v', Description = "Enable verbose output.")]
+    public readonly bool Verbose;
+    
+    [Option(Short = 'l', Description = "LogLevel.", Default = "info")]
+    public readonly LogLevel LogLevel;
 }
 
 public enum LogLevel

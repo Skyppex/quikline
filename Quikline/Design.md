@@ -59,7 +59,6 @@ Commands only support certain types:
   - LongPrefix: The prefix for the long names of the options. If not provided, the default prefix
     is `-`.
 - `[Args]` -> Defines the `struct` as the input type for the arguments of the command.
-  - Description: The description of the arguments.
   - ShortPrefix: The prefix for the short names of the options. If not provided, the default prefix
     is `-`.
   - LongPrefix: The prefix for the long names of the options. If not provided, the default prefix

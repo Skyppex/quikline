@@ -118,7 +118,7 @@ internal static class Help
         }
     }
     
-    private class Color : IDisposable
+    internal class Color : IDisposable
     {
         private readonly ConsoleColor _defaultColor;
 

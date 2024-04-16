@@ -7,20 +7,43 @@ internal static class InterfaceParser
 {
     public static Interface Parse(Type type)
     {
-        IEnumerable<Attribute> attributes = type.GetCustomAttributes();
+        List<Attribute> attributes = type.GetCustomAttributes().ToList();
 
-        if (attributes.SingleOrDefault(a => a is CommandAttribute) is not CommandAttribute
-            commandAttr)
-            throw new InvalidOperationException(
-                "The provided type does not have a Command attribute.");
+        var commandAttr = (CommandAttribute?)attributes.SingleOrDefault(a => a is CommandAttribute);
+        var argsAttr = (ArgsAttribute?)attributes.SingleOrDefault(a => a is ArgsAttribute);
 
-        var @interface = new Interface(commandAttr);
+        if (commandAttr is null && argsAttr is null)
+            throw new InvalidProgramException(
+                "Incorrect setup. Type must have either Command or Args attribute.");
+        
+        if (commandAttr is not null && argsAttr is not null)
+            throw new InvalidProgramException(
+                "Incorrect setup. Type cannot have both Command and Args attributes.");
+
+        if (argsAttr is not null)
+        {
+            commandAttr = new CommandAttribute
+            {
+                Description = null,
+                ShortPrefix = argsAttr.ShortPrefix,
+                LongPrefix = argsAttr.LongPrefix,
+                Version = false,
+            };
+        }
+        
+        var @interface = new Interface(commandAttr!);
 
         // Add the options and arguments from the fields.
         FieldInfo[] fields = type.GetFields();
 
         foreach (FieldInfo field in fields)
         {
+            if (field.FieldType.GetCustomAttribute(typeof(ArgsAttribute)) is not null)
+            {
+                @interface.Merge(Parse(field.FieldType));
+                continue;
+            }
+            
             var optionAttr = (OptionAttribute?)field.GetCustomAttributes()
                 .SingleOrDefault(a => a is OptionAttribute);
 
@@ -52,7 +75,7 @@ internal static class InterfaceParser
         }
 
         // Add generated options.
-        if (commandAttr.Version)
+        if (commandAttr!.Version)
         {
             bool isUsingLowerCaseV = @interface.Options.Contains(
                 Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("v"))),
@@ -81,31 +104,34 @@ internal static class InterfaceParser
                     "Print the version"));
         }
 
-        bool isUsingLowerCaseH = @interface.Options.Contains(
-            Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("h"))),
-            new ShortOptionEqualityComparer());
-
-        bool isUsingUpperCaseH = @interface.Options.Contains(
-            Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("H"))),
-            new ShortOptionEqualityComparer());
-
-        Short? shortHelp = (isUsingLowerCaseH, isUsingUpperCaseH) switch
+        if (argsAttr is null)
         {
-            (false, _) => new Short(@interface.ShortPrefix, new Name("h")),
-            (true, false) => new Short(@interface.ShortPrefix, new Name("H")),
-            _ => null
-        };
+            bool isUsingLowerCaseH = @interface.Options.Contains(
+                Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("h"))),
+                new ShortOptionEqualityComparer());
 
-        @interface.Options.Insert(
-            0,
-            new Option(
-                "",
-                false,
-                shortHelp,
-                new Long(@interface.LongPrefix, new Name("help")),
-                typeof(bool),
-                null,
-                "Print this help message"));
+            bool isUsingUpperCaseH = @interface.Options.Contains(
+                Option.ShortOnly(new Short(@interface.ShortPrefix, new Name("H"))),
+                new ShortOptionEqualityComparer());
+
+            Short? shortHelp = (isUsingLowerCaseH, isUsingUpperCaseH) switch
+            {
+                (false, _) => new Short(@interface.ShortPrefix, new Name("h")),
+                (true, false) => new Short(@interface.ShortPrefix, new Name("H")),
+                _ => null
+            };
+
+            @interface.Options.Insert(
+                0,
+                new Option(
+                    "",
+                    false,
+                    shortHelp,
+                    new Long(@interface.LongPrefix, new Name("help")),
+                    typeof(bool),
+                    null,
+                    "Print this help message"));
+        }
 
         if (@interface.Arguments.Count(a => a.IsRest) > 2)
             throw new InvalidProgramException(

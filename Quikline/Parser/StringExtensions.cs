@@ -12,7 +12,7 @@ internal static class TypeExtensions
             
             for (int i = 0; i < names.Length; i++)
             {
-                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Out.Write(names[i].SplitPascalCase().ToKebabCase());
                 
                 if (i < names.Length - 1)

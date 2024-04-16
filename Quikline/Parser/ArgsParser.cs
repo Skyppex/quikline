@@ -303,7 +303,7 @@ internal static class ArgsParser
         }
         else if (option.Type.IsEnum)
         {
-            if (!Enum.TryParse(option.Type, value, ignoreCase: true, out object? enumValue))
+            if (!Enum.TryParse(option.Type, value.SplitKebabCase().ToPascalCase(), ignoreCase: true, out object? enumValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected an enum value for option {arg}.");
