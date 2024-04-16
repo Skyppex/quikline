@@ -8,7 +8,7 @@ internal static class TypeExtensions
     {
         if (type.IsEnum)
         {
-            var names = Enum.GetNames(type);
+            string[] names = Enum.GetNames(type);
             
             for (int i = 0; i < names.Length; i++)
             {
