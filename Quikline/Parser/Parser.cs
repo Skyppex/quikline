@@ -402,7 +402,10 @@ public static class Quik
         IEnumerator<Argument> interfaceArgumentIterator)
     {
         if (@interface.TryGetOption(arg, out Option option))
+        {
             ParseOption(arg, parsed, argIterator, option);
+            return;
+        }
 
         ParseArgument(arg, parsed, argIterator, interfaceArgumentIterator);
     }
