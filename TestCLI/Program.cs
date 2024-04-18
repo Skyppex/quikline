@@ -39,6 +39,8 @@ public readonly struct Args
 
     public readonly LoggingArgs LoggingArgs;
 
+    public readonly Commands Commands;
+
     public override string ToString()
     {
         var fields = typeof(Args).GetFields();
@@ -126,6 +128,35 @@ public readonly struct LoggingArgs2
 
         return builder.ToString();
     }
+}
+
+[Args]
+public readonly struct Commands
+{
+    public readonly Sub Sub;
+}
+
+[Subcommand(Description = "A test subcommand.")]
+public readonly struct Sub
+{
+    [Option(Short = 'w', Description = "Woofer.")]
+    public readonly bool Woofer;
+
+    [Argument(Description = "The file to process.")]
+    public readonly float Threshold;
+
+    public readonly SubSub SubSub;
+    
+}
+
+[Subcommand(Description = "A test subsubcommand.")]
+public readonly struct SubSub
+{
+    [Option(Short = 'w', Description = "Woofer.")]
+    public readonly bool Woofer;
+
+    [Argument(Description = "The file to process.")]
+    public readonly float Threshold;
 }
 
 public enum LogLevel

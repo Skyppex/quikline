@@ -6,13 +6,21 @@ namespace Quikline.Parser;
 
 internal static class InterfaceParser
 {
-    public static Interface Parse(Type type)
+    public static Interface Parse(Type type, Interface? parent)
     {
-        List<Attribute> attributes = type.GetCustomAttributes().ToList();
+        var attributes = type.GetCustomAttributes().ToList();
 
         var commandAttr = (CommandAttribute?)attributes.SingleOrDefault(a => a is CommandAttribute);
+        var subcommandAttr = (SubcommandAttribute?)attributes.SingleOrDefault(a => a is SubcommandAttribute);
         var argsAttr = (ArgsAttribute?)attributes.SingleOrDefault(a => a is ArgsAttribute);
 
+        if (commandAttr is not null && subcommandAttr is not null)
+            throw new InvalidProgramException(
+                "Incorrect setup. Type cannot have both Command and Subcommand attributes.");
+
+        if (subcommandAttr is not null)
+            commandAttr = subcommandAttr.IntoCommand();
+        
         if (commandAttr is null && argsAttr is null)
             throw new InvalidProgramException(
                 "Incorrect setup. Type must have either Command or Args attribute.");
@@ -32,16 +40,22 @@ internal static class InterfaceParser
             };
         }
         
-        var @interface = new Interface(commandAttr!);
+        var @interface = new Interface(commandAttr!, type, subcommandAttr is null ? null : type.Name, parent);
 
         // Add the options and arguments from the fields.
-        FieldInfo[] fields = type.GetFields();
+        var fields = type.GetFields();
 
         foreach (var field in fields)
         {
             if (field.FieldType.GetCustomAttribute(typeof(ArgsAttribute)) is not null)
             {
-                @interface.Merge(Parse(field.FieldType));
+                @interface.Merge(Parse(field.FieldType, null));
+                continue;
+            }
+
+            if (field.FieldType.GetCustomAttribute(typeof(SubcommandAttribute)) is not null)
+            {
+                @interface.AddSubcommand(Parse(field.FieldType, @interface));
                 continue;
             }
             

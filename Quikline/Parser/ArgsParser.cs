@@ -4,11 +4,9 @@ namespace Quikline.Parser;
 
 internal static class ArgsParser
 {
-    public static Args Parse(string[] args, Interface @interface)
+    public static Args Parse(IEnumerator<string> argIterator, Interface @interface)
     {
-        var parsed = new Args();
-
-        IEnumerator<string> argIterator = args.ToList().GetEnumerator();
+        var parsed = new Args(@interface.CommandType);
         IEnumerator<Argument> interfaceArgumentIterator = @interface.Arguments.GetEnumerator();
 
         while (true)
@@ -17,6 +15,17 @@ internal static class ArgsParser
                 break;
 
             var arg = argIterator.Current;
+
+            var subcommand = @interface.Subcommands.SingleOrDefault(
+                sc => sc.CommandName.SplitPascalCase().ToKebabCase().Equals(
+                    arg,
+                    StringComparison.CurrentCultureIgnoreCase));
+
+            if (subcommand is not null)
+            {
+                parsed.Subcommand = Parse(argIterator, subcommand);
+                return parsed;
+            }
 
             if (!arg.StartsWith(@interface.LongPrefix) && arg.StartsWith(@interface.ShortPrefix))
             {

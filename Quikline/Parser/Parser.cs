@@ -13,22 +13,29 @@ public static class Quik
         var args = Environment.GetCommandLineArgs()[1..];
 
         var type = typeof(T);
-        var @interface = InterfaceParser.Parse(type);
+        var @interface = InterfaceParser.Parse(type, null);
 
-        var passedArgs = ArgsParser.Parse(args, @interface);
+        IEnumerator<string> argIterator = args.ToList().GetEnumerator();
+        var passedArgs = ArgsParser.Parse(argIterator, @interface);
 
+        return (T)CreateArgs(passedArgs, @interface, type);
+    }
+
+    private static object CreateArgs(
+        Args passedArgs,
+        Interface @interface,
+        Type type)
+    {
         if (passedArgs.Options.Where(o => o.Passed)
             .Any(
                 o =>
                 {
                     var interfaceLongPrefix = @interface.LongPrefix;
-
                     return o.Matches($"{interfaceLongPrefix}help");
                 }))
         {
             Help.Print(@interface);
             Environment.Exit(0);
-            return default;
         }
 
         if (passedArgs.Options.Where(o => o.Passed)
@@ -37,8 +44,17 @@ public static class Quik
             var version = type.Assembly.GetName().Version;
             Console.Out.Write(version);
             Environment.Exit(0);
+        }
 
-            return default;
+        if (passedArgs.Subcommand is not null)
+        {
+            var subcommand = passedArgs.Subcommand;
+            var subcommandType = subcommand.Type;
+            var subcommandUseArgs = CreateArgs(subcommand, @interface.Subcommands.Single(sc => sc.CommandName == subcommandType.Name), subcommandType);
+            var value = Activator.CreateInstance(type)!;
+            var subcommandField = type.GetFields().Single(fi => fi.FieldType == subcommandType);
+            subcommandField.SetValue(value, subcommandUseArgs);
+            return value;
         }
 
         if (MissingRequired(@interface, passedArgs, out var missing))
@@ -48,9 +64,7 @@ public static class Quik
             Environment.Exit(1);
         }
 
-        // var value = CreateUserArgs(type, passedArgs);
-        var value = CreateUserArgs(type, passedArgs);
-        return (T)value;
+        return CreateUserArgs(passedArgs.Type, passedArgs);
     }
 
     private static object CreateUserArgs(Type type, Args passedArgs)

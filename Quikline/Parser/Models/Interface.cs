@@ -2,28 +2,36 @@
 
 namespace Quikline.Parser.Models;
 
-internal struct Interface(CommandAttribute commandAttribute)
+internal class Interface(CommandAttribute commandAttribute, Type commandType, string? commandName = null, Interface? parent = null)
 {
-    public readonly string ProgramName =
+    public static readonly string ProgramName =
         Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
 
+    public readonly string CommandName = commandName ?? ProgramName;
+    public readonly Type CommandType = commandType;
+    public Interface? Parent = parent;
+    
     public readonly string? Description = commandAttribute.Description;
     public readonly Prefix ShortPrefix = new(commandAttribute.ShortPrefix);
     public readonly Prefix LongPrefix = new(commandAttribute.LongPrefix);
+    
     public List<Option> Options { get; set; } = [];
     public List<Argument> Arguments { get; set; } = [];
+    
+    public List<Interface> Subcommands { get; set; } = [];
 
     public void AddOption(Option option) => Options.Add(option);
     public void AddArgument(Argument argument) => Arguments.Add(argument);
+    public void AddSubcommand(Interface @interface) => Subcommands.Add(@interface);
 
     public bool TryGetOption(string arg, out Option option)
     {
         option = Options.FirstOrDefault(
             o => (arg.StartsWith(o.Long.Prefix) &&
                   arg[o.Long.Prefix.Length..].Equals(o.Long.Name)) ||
-                 (o.Short != null && (arg.StartsWith(o.Short.Value.Prefix) &&
-                                      arg[o.Short.Value.Prefix.Length..]
-                                          .Equals(o.Short.Value.Name))));
+                 (o.Short != null && arg.StartsWith(o.Short.Value.Prefix) &&
+                  arg[o.Short.Value.Prefix.Length..]
+                      .Equals(o.Short.Value.Name)));
 
         return option != default;
     }
@@ -32,6 +40,7 @@ internal struct Interface(CommandAttribute commandAttribute)
     {
         Options.AddRange(@interface.Options);
         Arguments.AddRange(@interface.Arguments);
+        Subcommands.AddRange(@interface.Subcommands);
     }
 }
 
