@@ -26,17 +26,3 @@ public sealed class CommandAttribute : Attribute
     /// <remarks>If both -v and -V is already used in your interface, Version cannot be included.</remarks>
     public bool Version { get; init; }
 }
-
-[AttributeUsage(validOn: AttributeTargets.Struct)]
-public sealed class ArgsAttribute : Attribute
-{
-    /// <summary>
-    /// The prefix for the short names of the options. If not provided, the default prefix is `-`.
-    /// </summary>
-    public string ShortPrefix { get; init; } = "-";
-
-    /// <summary>
-    /// The prefix for the short names of the options. If not provided, the default prefix is `--`.
-    /// </summary>
-    public string LongPrefix { get; init; } = "--";
-}
