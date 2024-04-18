@@ -236,7 +236,7 @@ internal static class InterfaceParser
             argumentAttr.Optional,
             name,
             field.FieldType,
-            null,
+            argumentAttr.Default,
             argumentAttr.Description);
 
         if (field.FieldType.IsEnum)

@@ -102,6 +102,9 @@ public readonly struct LoggingArgs2
 {
     [Option(Description = "Number.", Default = 42)]
     public readonly int Number;
+
+    [Argument(Description = "Test", Default = "Hello, World!")]
+    public readonly string Text;
     
     public override string ToString()
     {
