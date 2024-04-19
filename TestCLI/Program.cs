@@ -142,7 +142,7 @@ public readonly struct Sub
     [Option(Short = 'w', Description = "Woofer.")]
     public readonly bool Woofer;
 
-    [Argument(Description = "The file to process.")]
+    [Argument(Description = "The file to process.", Optional = true)]
     public readonly float Threshold;
 
     public readonly SubSub SubSub;

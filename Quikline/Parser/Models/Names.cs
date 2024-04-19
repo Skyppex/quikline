@@ -34,7 +34,14 @@ internal readonly record struct Long(Prefix Prefix, Name Name)
 
 internal sealed class ShortOptionEqualityComparer : IEqualityComparer<Option>
 {
-    public bool Equals(Option x, Option y) => Nullable.Equals(x.Short, y.Short);
+    public bool Equals(Option x, Option y)
+    {
+        if (x.Short is null && y.Short is null)
+            return false;
+        
+        return Nullable.Equals(x.Short, y.Short);
+    }
+
     public int GetHashCode(Option obj) => obj.Short.GetHashCode();
 }
 

@@ -47,29 +47,34 @@ internal static class InterfaceParser
 
         foreach (var field in fields)
         {
-            if (field.FieldType.GetCustomAttribute(typeof(ArgsAttribute)) is not null)
+            var fieldAttributes = field.GetCustomAttributes().ToList();
+            var fieldTypeAttributes = field.FieldType.GetCustomAttributes().ToList();
+
+            ValidateSupportedType(field, fieldTypeAttributes);
+
+            if (fieldTypeAttributes.SingleOrDefault(a => a is ArgsAttribute) is not null)
             {
                 @interface.Merge(Parse(field.FieldType, null));
                 continue;
             }
 
-            if (field.FieldType.GetCustomAttribute(typeof(SubcommandAttribute)) is not null)
+            if (fieldTypeAttributes.SingleOrDefault(a => a is SubcommandAttribute) is not null)
             {
                 @interface.AddSubcommand(Parse(field.FieldType, @interface));
                 continue;
             }
-            
-            var optionAttr = (OptionAttribute?)field.GetCustomAttributes()
+
+            var optionAttr = (OptionAttribute?)fieldAttributes
                 .SingleOrDefault(a => a is OptionAttribute);
 
             Validation.ValidateOption(optionAttr, field.Name);
             
-            var argumentAttr = (ArgumentAttribute?)field.GetCustomAttributes()
+            var argumentAttr = (ArgumentAttribute?)fieldAttributes
                 .SingleOrDefault(a => a is ArgumentAttribute);
 
             Validation.ValidateArgument(argumentAttr, field.Name);
             
-            var restAttr = (RestAttribute?)field.GetCustomAttributes()
+            var restAttr = (RestAttribute?)fieldAttributes
                 .SingleOrDefault(a => a is RestAttribute);
 
             Validation.ValidateRest(restAttr, field.Name);
@@ -296,4 +301,28 @@ internal static class InterfaceParser
         @interface.AddArgument(argument);
     }
 
+    private static void ValidateSupportedType(FieldInfo field, List<Attribute> fieldAttributes)
+    {
+        List<Type> supportedTypes =
+        [
+            typeof(bool), typeof(int), typeof(float), typeof(double), typeof(char),
+            typeof(string),
+        ];
+
+        if (supportedTypes.Contains(field.FieldType))
+            return;
+
+        if (field.FieldType.IsEnum)
+            return;
+
+        if (fieldAttributes.SingleOrDefault(a => a is ArgsAttribute) is not null)
+            return;
+        
+        if (fieldAttributes.SingleOrDefault(a => a is SubcommandAttribute) is not null)
+            return;
+
+        throw new InvalidProgramException(
+            "Incorrect setup. Unsupported type found: " +
+            $"{field.FieldType.Name} for field {field.DeclaringType}.{field.Name}.");
+    }
 }
