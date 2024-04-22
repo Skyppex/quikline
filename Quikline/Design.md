@@ -5,7 +5,6 @@ define the command line interface for my app.
 
 ## Semantics
 
-
 A command can include the following:
 - A description
   - The description can be used to generate help text
