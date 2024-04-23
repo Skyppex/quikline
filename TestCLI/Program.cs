@@ -13,6 +13,9 @@ Console.WriteLine(a);
 [Command(Version = true, Description = "A test CLI program.")]
 public readonly struct TestArgs
 {
+    [Option(Short = '1', Description = "Single element.")]
+    public readonly bool Single;
+    
     [Option(Short = 'f', Description = "Force the operation.")]
     public readonly bool Force;
 

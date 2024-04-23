@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 
 namespace Quikline.Parser;
@@ -30,7 +31,14 @@ internal static class TypeExtensions
         Console.Out.Write(type.Name.SplitPascalCase().ToKebabCase());
     }
     
-    public static bool IsNullable(this Type type) => Nullable.GetUnderlyingType(type) is not null;
+    public static bool IsNullable(this FieldInfo field)
+    {
+        if (field.FieldType.IsValueType)
+            return Nullable.GetUnderlyingType(field.FieldType) is not null;
+
+        var info = new NullabilityInfoContext().Create(field);
+        return info.ReadState == NullabilityState.Nullable;
+    }
 }
 
 internal static class StringExtensions

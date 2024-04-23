@@ -264,7 +264,7 @@ internal static class InterfaceParser
         var argument = new Argument(
             false,
             field.Name,
-            field.FieldType.IsNullable() || argumentAttr.Default is not null,
+            field.IsNullable() || argumentAttr.Default is not null,
             name,
             field.FieldType,
             argumentAttr.Default,
@@ -297,12 +297,12 @@ internal static class InterfaceParser
     {
         if (field.FieldType != typeof(string))
             throw new InvalidProgramException(
-                $"Incorrect setup. Field {field.Name} with Rest attribute must be of type string.");
+                $"Incorrect setup. Field {field.Name} with Rest attribute must be of type string (cannot be nullable).");
 
         var argument = new Argument(
             false,
             field.Name,
-            false,
+            true,
             restAttr.Name ?? field.Name.SplitPascalCase().ToKebabCase(),
             field.FieldType,
             null,
