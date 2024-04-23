@@ -1,8 +1,8 @@
 ﻿namespace Quikline.Parser.Models;
 
-internal class Args(Type type)
+internal class Args(Type commandType)
 {
-    public Type Type { get; } = type;
+    public Type CommandType { get; } = commandType;
     public ICollection<Option> Options { get; init; } = [];
     public ICollection<Argument> Arguments { get; init; } = [];
     public Args? Subcommand { get; set; }

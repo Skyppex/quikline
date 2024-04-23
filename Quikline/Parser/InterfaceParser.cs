@@ -8,12 +8,13 @@ internal static class InterfaceParser
 {
     public static Interface Parse(Type type, Interface? parent)
     {
-        var attributes = type.GetCustomAttributes().ToList();
+        var underlyingType = type.GetUnderlyingType();
+        var attributes = underlyingType.GetCustomAttributes().ToList();
 
         var commandAttr = (CommandAttribute?)attributes.SingleOrDefault(a => a is CommandAttribute);
         var subcommandAttr = (SubcommandAttribute?)attributes.SingleOrDefault(a => a is SubcommandAttribute);
         var argsAttr = (ArgsAttribute?)attributes.SingleOrDefault(a => a is ArgsAttribute);
-
+        
         if (commandAttr is not null && subcommandAttr is not null)
             throw new InvalidProgramException(
                 "Incorrect setup. Type cannot have both Command and Subcommand attributes.");
@@ -31,6 +32,10 @@ internal static class InterfaceParser
 
         if (argsAttr is not null)
         {
+            if (type != underlyingType)
+                throw new InvalidProgramException(
+                    $"Incorrect setup. Field of Type: {underlyingType.Name} with Args attribute cannot be nullable.");
+            
             commandAttr = new CommandAttribute
             {
                 Description = null,
@@ -40,17 +45,20 @@ internal static class InterfaceParser
             };
         }
         
-        var @interface = new Interface(commandAttr!, type, subcommandAttr is null ? null : type.Name, parent);
+        var @interface = new Interface(commandAttr!, underlyingType, subcommandAttr is null ? null : underlyingType.Name, parent);
 
         // Add the options and arguments from the fields.
-        var fields = type.GetFields();
+        var fields = underlyingType.GetFields();
 
         foreach (var field in fields)
         {
             var fieldAttributes = field.GetCustomAttributes().ToList();
-            var fieldTypeAttributes = field.FieldType.GetCustomAttributes().ToList();
 
-            ValidateSupportedType(field, fieldTypeAttributes);
+            List<Attribute> fieldTypeAttributes = Nullable.GetUnderlyingType(field.FieldType) is not null
+                ? Nullable.GetUnderlyingType(field.FieldType)!.GetCustomAttributes().ToList()
+                : field.FieldType.GetCustomAttributes().ToList();
+
+            ValidateSupportedType(field.FieldType, fieldTypeAttributes, field.DeclaringType, field.Name);
 
             if (fieldTypeAttributes.SingleOrDefault(a => a is ArgsAttribute) is not null)
             {
@@ -60,6 +68,10 @@ internal static class InterfaceParser
 
             if (fieldTypeAttributes.SingleOrDefault(a => a is SubcommandAttribute) is not null)
             {
+                if (Nullable.GetUnderlyingType(field.FieldType) is null)
+                    throw new InvalidProgramException(
+                        $"Incorrect setup. Field {field.Name} is a Subcommand. Fields for Subcommands must be nullable.");
+                
                 @interface.AddSubcommand(Parse(field.FieldType, @interface));
                 continue;
             }
@@ -252,7 +264,7 @@ internal static class InterfaceParser
         var argument = new Argument(
             false,
             field.Name,
-            argumentAttr.Optional,
+            field.FieldType.IsNullable() || argumentAttr.Default is not null,
             name,
             field.FieldType,
             argumentAttr.Default,
@@ -301,18 +313,25 @@ internal static class InterfaceParser
         @interface.AddArgument(argument);
     }
 
-    private static void ValidateSupportedType(FieldInfo field, List<Attribute> fieldAttributes)
+    private static void ValidateSupportedType(Type fieldType, List<Attribute> fieldAttributes, Type? fieldDeclaringType, string fieldName)
     {
         List<Type> supportedTypes =
         [
             typeof(bool), typeof(int), typeof(float), typeof(double), typeof(char),
-            typeof(string),
+            typeof(string)
         ];
 
-        if (supportedTypes.Contains(field.FieldType))
+        if (supportedTypes.Contains(fieldType))
             return;
 
-        if (field.FieldType.IsEnum)
+        if (Nullable.GetUnderlyingType(fieldType) is not null)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(fieldType)!;
+            ValidateSupportedType(underlyingType, fieldAttributes, fieldDeclaringType, fieldName);
+            return;
+        }
+        
+        if (fieldType.IsEnum)
             return;
 
         if (fieldAttributes.SingleOrDefault(a => a is ArgsAttribute) is not null)
@@ -323,6 +342,6 @@ internal static class InterfaceParser
 
         throw new InvalidProgramException(
             "Incorrect setup. Unsupported type found: " +
-            $"{field.FieldType.Name} for field {field.DeclaringType}.{field.Name}.");
+            $"{fieldType.Name} for field {(fieldDeclaringType is null ? "" : fieldDeclaringType + ".")}{fieldName}.");
     }
 }

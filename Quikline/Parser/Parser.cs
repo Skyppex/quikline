@@ -48,23 +48,84 @@ public static class Quik
 
         if (passedArgs.Subcommand is not null)
         {
-            var subcommand = passedArgs.Subcommand;
-            var subcommandType = subcommand.Type;
-            var subcommandUseArgs = CreateArgs(subcommand, @interface.Subcommands.Single(sc => sc.CommandName == subcommandType.Name), subcommandType);
-            var value = Activator.CreateInstance(type)!;
-            var subcommandField = type.GetFields().Single(fi => fi.FieldType == subcommandType);
-            subcommandField.SetValue(value, subcommandUseArgs);
-            return value;
-        }
+            var instance = Activator.CreateInstance(type)!;
+            var subcommandType = passedArgs.Subcommand.CommandType;
+            var subcommandInterface = @interface.Subcommands.Single(s => s.CommandName == subcommandType.Name);
 
-        if (MissingRequired(@interface, passedArgs, out var missing))
-        {
-            Console.Error.WriteLine($"Incorrect usage. Missing required options: {missing}");
+            var subcommandUserArgs = CreateSubcommandUserArgs(
+                passedArgs.Subcommand,
+                subcommandInterface,
+                subcommandType);
+
+            SetValueOnInstance(type, subcommandType, instance, subcommandUserArgs);
+
+            if (!MissingRequired(
+                    @interface,
+                    passedArgs.Subcommand,
+                    out var subcommandMissing))
+                return instance;
+
+            Console.Error.WriteLine(
+                $"Incorrect usage. Missing required options: {string.Join(",", subcommandMissing)}");
+
             Console.Error.Write("Use --help for more information.");
             Environment.Exit(1);
+            return default;
         }
 
-        return CreateUserArgs(passedArgs.Type, passedArgs);
+        if (!MissingRequired(@interface, passedArgs, out var missing))
+            return CreateUserArgs(passedArgs.CommandType, passedArgs);
+
+        Console.Error.WriteLine($"Incorrect usage. Missing required options: {string.Join(",", missing)}");
+        Console.Error.Write("Use --help for more information.");
+        Environment.Exit(1);
+        return default;
+    }
+
+    private static bool SetValueOnInstance(
+        Type type,
+        Type subcommandType,
+        object instance,
+        object subcommandUserArgs)
+    {
+        var fields = type.GetFields();
+
+        foreach (var field in fields)
+        {
+            if (field.FieldType.GetCustomAttribute(typeof(ArgsAttribute)) is not null)
+            {
+                var subInstance = Activator.CreateInstance(field.FieldType)!;
+
+                if (SetValueOnInstance(
+                        field.FieldType,
+                        subcommandType,
+                        subInstance,
+                        subcommandUserArgs))
+                {
+                    field.SetValue(instance, subInstance);
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (field.FieldType.GetUnderlyingType() != subcommandType)
+                continue;
+
+            field.SetValue(instance, subcommandUserArgs);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static object CreateSubcommandUserArgs(
+        Args passedArgs,
+        Interface @interface,
+        Type type)
+    {
+        var args = CreateArgs(passedArgs, @interface, type);
+        return args;
     }
 
     private static object CreateUserArgs(Type type, Args passedArgs)
@@ -144,10 +205,18 @@ public static class Quik
     private static bool MissingRequired(Interface @interface, Args args, out string[] missing)
     {
         missing = @interface.Options
-            .Where(o => o.Required && args.Options
-                .Where(o => !o.Passed)
-                .Contains(o, new ShortOptionEqualityComparer()))
+            .Where(
+                o => o.Required && args.Options
+                    .Where(o => !o.Passed)
+                    .Contains(o, new ShortOptionEqualityComparer()))
             .Select(o => o.Long.Name.ToString())
+            .Concat(
+                @interface.Arguments
+                    .Where(
+                        a => !a.Optional && args.Arguments
+                            .Where(a => !a.Passed)
+                            .Contains(a, new ArgumentNameEqualityComparer()))
+                    .Select(a => a.Name))
             .ToArray();
 
         return missing.Length > 0;

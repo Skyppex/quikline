@@ -1,9 +1,11 @@
-﻿using System.Text;
+using System.Text;
 
 namespace Quikline.Parser;
 
 internal static class TypeExtensions
 {
+    public static Type GetUnderlyingType(this Type fieldType) => Nullable.GetUnderlyingType(fieldType) ?? fieldType;
+    
     public static void PrintUsageName(this Type type)
     {
         if (type.IsEnum)
@@ -27,6 +29,8 @@ internal static class TypeExtensions
 
         Console.Out.Write(type.Name.SplitPascalCase().ToKebabCase());
     }
+    
+    public static bool IsNullable(this Type type) => Nullable.GetUnderlyingType(type) is not null;
 }
 
 internal static class StringExtensions

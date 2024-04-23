@@ -4,14 +4,14 @@ using System.Text;
 using Quikline.Attributes;
 using Quikline.Parser;
 
-var a = Quik.Parse<Args>();
+var a = Quik.Parse<TestArgs>();
 
 Console.WriteLine(a);
 
 // ReSharper disable UnassignedReadonlyField
 
 [Command(Version = true, Description = "A test CLI program.")]
-public readonly struct Args
+public readonly struct TestArgs
 {
     [Option(Short = 'f', Description = "Force the operation.")]
     public readonly bool Force;
@@ -28,8 +28,8 @@ public readonly struct Args
     [Argument(Description = "The file to process.")]
     public readonly string File;
 
-    [Argument(Description = "The other file to process.", Optional = true)]
-    public readonly string OtherFile;
+    [Argument(Description = "The other file to process.")]
+    public readonly string? OtherFile;
 
     [Rest(Description = "The rest of the arguments.")]
     public readonly string Rest;
@@ -38,12 +38,11 @@ public readonly struct Args
     public readonly string Rest2;
 
     public readonly LoggingArgs LoggingArgs;
-
     public readonly Commands Commands;
 
     public override string ToString()
     {
-        var fields = typeof(Args).GetFields();
+        var fields = typeof(TestArgs).GetFields();
 
         var builder = new StringBuilder();
 
@@ -133,7 +132,28 @@ public readonly struct LoggingArgs2
 [Args]
 public readonly struct Commands
 {
-    public readonly Sub Sub;
+    public readonly Sub? Sub;
+    
+    public override string ToString()
+    {
+        var fields = typeof(Commands).GetFields();
+
+        var builder = new StringBuilder();
+
+        foreach (var field in fields)
+        {
+            if (field.FieldType.GetCustomAttribute<ArgsAttribute>() is not null)
+            {
+                var subThis = field.GetValue(this)!;
+                builder.Append(subThis);
+                continue;
+            }
+            
+            builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
+        }
+
+        return builder.ToString();
+    }
 }
 
 [Subcommand(Description = "A test subcommand.")]
@@ -142,11 +162,31 @@ public readonly struct Sub
     [Option(Short = 'w', Description = "Woofer.")]
     public readonly bool Woofer;
 
-    [Argument(Description = "The file to process.", Optional = true)]
+    [Argument(Description = "The file to process.", Default = 10f)]
     public readonly float Threshold;
 
-    public readonly SubSub SubSub;
+    public readonly SubSub? SubSub;
     
+    public override string ToString()
+    {
+        var fields = typeof(Sub).GetFields();
+
+        var builder = new StringBuilder();
+
+        foreach (var field in fields)
+        {
+            if (field.FieldType.GetCustomAttribute<ArgsAttribute>() is not null)
+            {
+                var subThis = field.GetValue(this)!;
+                builder.Append(subThis);
+                continue;
+            }
+            
+            builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
+        }
+
+        return builder.ToString();
+    }
 }
 
 [Subcommand(Description = "A test subsubcommand.")]
@@ -156,7 +196,28 @@ public readonly struct SubSub
     public readonly bool Woofer;
 
     [Argument(Description = "The file to process.")]
-    public readonly float Threshold;
+    public readonly float? Threshold;
+    
+    public override string ToString()
+    {
+        var fields = typeof(SubSub).GetFields();
+
+        var builder = new StringBuilder();
+
+        foreach (var field in fields)
+        {
+            if (field.FieldType.GetCustomAttribute<ArgsAttribute>() is not null)
+            {
+                var subThis = field.GetValue(this)!;
+                builder.Append(subThis);
+                continue;
+            }
+            
+            builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
+        }
+
+        return builder.ToString();
+    }
 }
 
 public enum LogLevel
