@@ -1,7 +1,7 @@
 ﻿namespace Quikline.Attributes;
 
 [AttributeUsage(validOn: AttributeTargets.Struct)]
-public sealed class ArgsAttribute : Attribute
+public class ArgsAttribute : Attribute
 {
     /// <summary>
     /// The prefix for the short names of the options. If not provided, the default prefix is `-`.

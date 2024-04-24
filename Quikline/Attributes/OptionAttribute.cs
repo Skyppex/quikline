@@ -1,7 +1,7 @@
 ﻿namespace Quikline.Attributes;
 
 [AttributeUsage(validOn: AttributeTargets.Field)]
-public sealed class OptionAttribute : Attribute
+public class OptionAttribute : Attribute
 {
     public char ShortPrefix { get; init; }
     public char Short { get; init; }

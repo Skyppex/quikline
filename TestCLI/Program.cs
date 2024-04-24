@@ -11,8 +11,13 @@ Console.WriteLine(a);
 // ReSharper disable UnassignedReadonlyField
 
 [Command(Version = true, Description = "A test CLI program.")]
+[ExclusiveRelation(Name = "casing", Args = [nameof(CaseSensitive), nameof(CaseInsensitive)])]
+[OneOrMoreRelation(Name = "elements", Args = [nameof(None), nameof(Single)])]
 public readonly struct TestArgs
 {
+    [Option(Short = '0', Description = "No elements.")]
+    public readonly bool None;
+    
     [Option(Short = '1', Description = "Single element.")]
     public readonly bool Single;
     
@@ -69,6 +74,7 @@ public readonly struct TestArgs
 }
 
 [Args]
+[InclusiveRelation(Name = "logging", Args = [nameof(Verbose), nameof(LogLevel)])]
 public readonly struct LoggingArgs
 {
     [Option(Short = 'v', Description = "Enable verbose output.")]
@@ -77,42 +83,9 @@ public readonly struct LoggingArgs
     [Option(Short = 'l', Description = "LogLevel.", Default = "info")]
     public readonly LogLevel LogLevel;
     
-    public readonly LoggingArgs2 LoggingArgs2;
-
     public override string ToString()
     {
         var fields = typeof(LoggingArgs).GetFields();
-
-        var builder = new StringBuilder();
-
-        foreach (var field in fields)
-        {
-            if (field.FieldType.GetCustomAttribute<ArgsAttribute>() is not null)
-            {
-                var subThis = field.GetValue(this)!;
-                builder.Append(subThis);
-                continue;
-            }
-            
-            builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
-        }
-
-        return builder.ToString();
-    }
-}
-
-[Args]
-public readonly struct LoggingArgs2
-{
-    [Option(Description = "Number.", Default = 42)]
-    public readonly int Number;
-
-    [Argument(Description = "Test", Default = "Hello, World!")]
-    public readonly string Text;
-    
-    public override string ToString()
-    {
-        var fields = typeof(LoggingArgs2).GetFields();
 
         var builder = new StringBuilder();
 
