@@ -39,28 +39,86 @@ Each of these have several properties for you to fill in to customize your API, 
   - Discriminates between lower and upper case short names (e.g. `-v` and `-V` are different)
   - Provide a description which is used in the help text
 
-## Example
+## Examples
 
+### Simple command
 ```csharp
-[Command(Version=true, Description="My command line tool")]
-public readonly struct MyCommand {    
-    [Option(Short = 'v', Long = "verbose", Description = "Enable verbose output")]
-    public readonly bool Verbose;
+[Command(Version=true, Description="Create some tea")]
+public readonly struct Tea {  
+    [Option(Short='m', Description="Add a number of sugar cubes to the tea")]
+    public readonly int Sugar;
     
-    [Option(Short = 'q', Long = "quiet", Description = "Enable quiet output")]
-    public readonly bool Quiet;
+    [Option(Short='m', Description="Add milk to the tea")]
+    public readonly bool Milk;
     
-    [Argument(Description = "Some argument")]
-    public readonly string? Argument; // Nullable means optional
+    [Argument(Description="The type of tea")]
+    public readonly TeaType TeaType;
     
-    [Argument(Description = "Some other argument")]
-    public readonly string OtherArgument; // Not nullable so its required
+    [Argument(Description="The temperature of the water", Default = 90)] // Celcius
+    public readonly int Temperature;
+}
+
+public enum TeaType {
+    Green,
+    Black,
+    White,
+    Oolong,
+    Herbal
+}
+```
+
+### Command with subcommands
+```csharp
+[Command(Version = true, Description="Create a beverage")]
+public readonly struct Beverage {
+    public readonly Tea Tea;
+    public readonly Coffee Coffee;
+}
+
+[Arg
+
+[Subcommand(Description="Create some tea")]
+public readonly struct Tea {  
+    [Option(Short='m', Description="Add a number of sugar cubes to the tea")]
+    public readonly int Sugar;
     
-    [Argument(Description = "Some third argument", Default="default")]
-    public readonly string ThirdArgument; // Not nullable, but has default so its optional
+    [Option(Short='m', Description="Add milk to the tea")]
+    public readonly bool Milk;
     
-    [Argument(Description = "Some invalid argument", Default="default")]
-    public readonly string? InvalidArgument; // Nullable and has default which is not allowed
+    [Argument(Description="The type of tea")]
+    public readonly TeaType TeaType;
+    
+    // Default value makes it optional, you can also use nullable types
+    [Argument(Description="The temperature of the water", Default = 90)]
+    public readonly int Temperature;
+}
+
+[Subcommand(Description="Create some coffee")]
+public readonly struct Coffee {
+    [Option(Short='m', Description="Add milk to the coffee")]
+    public readonly bool Milk;
+    
+    [Argument(Description="The type of coffee")]
+    public readonly CoffeeType CoffeeType;
+    
+    [Argument(Description="The temperature of the water", Default = 90)]
+    public readonly int Temperature;
+}
+
+public enum TeaType {
+    Green,
+    Black,
+    White,
+    Oolong,
+    Herbal
+}
+
+public enum CoffeeType {
+    Espresso,
+    Americano,
+    Latte,
+    Cappuccino,
+    Mocha
 }
 ```
 
