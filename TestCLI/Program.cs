@@ -132,10 +132,14 @@ public readonly struct Commands
 }
 
 [Subcommand(Description = "A test subcommand.")]
+[OneOrMoreRelation(nameof(Woofer), nameof(Poofer))]
 public readonly struct Sub
 {
     [Option(Short = 'w', Description = "Woofer.")]
     public readonly bool Woofer;
+
+    [Option(Short = 'p', Description = "Poofer.")]
+    public readonly bool Poofer;
 
     [Argument(Description = "The file to process.", Default = 10f)]
     public readonly float Threshold;
@@ -165,10 +169,14 @@ public readonly struct Sub
 }
 
 [Subcommand(Description = "A test subsubcommand.")]
+[OneOrMoreRelation(nameof(Woofer), nameof(Poofer))]
 public readonly struct SubSub
 {
     [Option(Short = 'w', Description = "Woofer.")]
     public readonly bool Woofer;
+    
+    [Option(Short = 'p', Description = "Poofer.")]
+    public readonly bool Poofer;
 
     [Argument(Description = "The file to process.")]
     public readonly float? Threshold;

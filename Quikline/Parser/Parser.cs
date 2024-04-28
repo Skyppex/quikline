@@ -17,138 +17,7 @@ public static class Quik
         IEnumerator<string> argIterator = args.ToList().GetEnumerator();
         var passedArgs = ArgsParser.Parse(argIterator, @interface);
 
-        ValidateRelations(passedArgs, type);
-
         return (T)CreateArgs(passedArgs, @interface, type);
-    }
-
-    private static void ValidateRelations(Args passedArgs, Type type)
-    {
-        var relations = type.GetCustomAttributes<RelationAttribute>()
-            .Concat(type.GetFields()
-                .Where(f => f.FieldType.GetCustomAttribute<ArgsAttribute>() is not null)
-                .Select(f => f.FieldType)
-                .Select(t => t.GetCustomAttributes<RelationAttribute>())
-                .Where(r => r.Any())
-                .SelectMany(r => r));
-
-        foreach (var relation in relations)
-        {
-            switch (relation)
-            {
-                case ExclusiveRelationAttribute exclusive:
-                    ValidateExclusiveRelation(exclusive, passedArgs);
-                    break;
-
-                case InclusiveRelationAttribute inclusive:
-                    ValidateInclusiveRelation(inclusive, passedArgs);
-                    break;
-
-                case OneOrMoreRelationAttribute oneOrMore:
-                    ValidateOneOrMoreRelation(oneOrMore, passedArgs);
-                    break;
-            }
-        }
-    }
-
-    private static void ValidateExclusiveRelation(
-        ExclusiveRelationAttribute exclusive,
-        Args passedArgs)
-    {
-        var relevant = passedArgs.Options
-            .Where(o => exclusive.Args.Contains(o.FieldName))
-            .Select(o => (o.FieldName, o.Passed, true))
-            .Concat(passedArgs.Arguments
-                .Where(a => exclusive.Args.Contains(a.FieldName))
-                .Select(a => (a.FieldName, a.Passed, false)))
-            .ToList();
-
-        var passed = relevant.Count(r => r.Passed);
-
-        if (exclusive.Required ? passed == 1 : passed <= 1)
-            return;
-
-        if (exclusive.Required && passed == 0)
-        {
-            Console.Error.WriteLine(
-                $"Incorrect usage. One of {string.Join(", ",
-                    relevant.Select(r => (r.Item3 ? "--" : "") + r.FieldName.SplitPascalCase().ToKebabCase()))} must be present.");
-
-            Console.Error.Write("Use --help for more information.");
-
-            Environment.Exit(1);
-        }
-
-        Console.Error.WriteLine(
-            $"Incorrect usage. Args: {string.Join(", ",
-                relevant.Select(r => (r.Item3 ? "--" : "") + r.FieldName.SplitPascalCase().ToKebabCase()))} are mutually exclusive.");
-
-        Console.Error.Write("Use --help for more information.");
-
-        Environment.Exit(1);
-    }
-
-    private static void ValidateInclusiveRelation(
-        InclusiveRelationAttribute inclusive,
-        Args passedArgs)
-    {
-        var relevant = passedArgs.Options
-            .Where(o => inclusive.Args.Contains(o.FieldName))
-            .Select(o => (o.FieldName, o.Passed, true))
-            .Concat(passedArgs.Arguments
-                .Where(a => inclusive.Args.Contains(a.FieldName))
-                .Select(a => (a.FieldName, a.Passed, false)))
-            .ToList();
-
-        var passed = relevant.Count(r => r.Passed);
-
-        if (inclusive.Required
-            ? passed == inclusive.Args.Length
-            : passed == 0 || passed == inclusive.Args.Length)
-            return;
-
-        if (inclusive.Required && passed == 0)
-        {
-            Console.Error.WriteLine(
-                $"Incorrect usage. All of {string.Join(", ",
-                    relevant.Select(r => (r.Item3 ? "--" : "") + r.FieldName.SplitPascalCase().ToKebabCase()))} must be present.");
-
-            Console.Error.Write("Use --help for more information.");
-
-            Environment.Exit(1);
-        }
-
-        Console.Error.WriteLine(
-            $"Incorrect usage. Args: {string.Join(", ",
-                relevant.Select(r => (r.Item3 ? "--" : "") + r.FieldName.SplitPascalCase().ToKebabCase()))} are mutually inclusive.");
-
-        Console.Error.Write("Use --help for more information.");
-
-        Environment.Exit(1);
-    }
-
-    private static void ValidateOneOrMoreRelation(
-        OneOrMoreRelationAttribute oneOrMore,
-        Args passedArgs)
-    {
-        var relevant = passedArgs.Options
-            .Where(o => oneOrMore.Args.Contains(o.FieldName))
-            .Select(o => (o.FieldName, o.Passed, true))
-            .Concat(passedArgs.Arguments
-                .Where(a => oneOrMore.Args.Contains(a.FieldName))
-                .Select(a => (a.FieldName, a.Passed, false)))
-            .ToList();
-
-        if (relevant.Count(r => r.Passed) >= 1)
-            return;
-
-        Console.Error.WriteLine(
-            $"Incorrect usage. At least one of {string.Join(", ",
-                relevant.Select(r => (r.Item3 ? "--" : "") + r.FieldName.SplitPascalCase().ToKebabCase()))} must be present.");
-
-        Console.Error.Write("Use --help for more information.");
-
-        Environment.Exit(1);
     }
 
     private static object CreateArgs(
@@ -175,6 +44,9 @@ public static class Quik
             Console.Out.Write(version);
             Environment.Exit(0);
         }
+
+        var (commandArgs, commandType) = GetCommand(passedArgs);
+        ValidateRelations(commandArgs, commandType);
 
         if (passedArgs.Subcommand is not null)
         {
@@ -214,6 +86,131 @@ public static class Quik
         Console.Error.Write("Use --help for more information.");
         Environment.Exit(1);
         return default;
+    }
+
+    private static (Args Args, Type CommandType) GetCommand(Args args)
+    {
+        if (args.Subcommand is null)
+            return (args, args.CommandType);
+        
+        return GetCommand(args.Subcommand);
+    }
+
+    private static void ValidateRelations(Args passedArgs, Type type)
+    {
+        var relations = type.GetCustomAttributes<RelationAttribute>()
+            .Concat(type.GetFields()
+                .Where(f => f.FieldType.GetCustomAttribute<ArgsAttribute>() is not null)
+                .Select(f => f.FieldType)
+                .Select(t => t.GetCustomAttributes<RelationAttribute>())
+                .Where(r => r.Any())
+                .SelectMany(r => r));
+
+        foreach (var relation in relations)
+        {
+            switch (relation)
+            {
+                case ExclusiveRelationAttribute exclusive:
+                    ValidateExclusiveRelation(exclusive, passedArgs);
+                    break;
+
+                case InclusiveRelationAttribute inclusive:
+                    ValidateInclusiveRelation(inclusive, passedArgs);
+                    break;
+
+                case OneOrMoreRelationAttribute oneOrMore:
+                    ValidateOneOrMoreRelation(oneOrMore, passedArgs);
+                    break;
+            }
+        }
+    }
+
+    private static void ValidateExclusiveRelation(
+        ExclusiveRelationAttribute exclusive,
+        Args passedArgs)
+    {
+        var relevant = passedArgs.Options
+            .Where(o => exclusive.Args.Contains(o.FieldName))
+            .ToList();
+
+        var passed = relevant.Count(r => r.Passed);
+
+        if (exclusive.Required ? passed == 1 : passed <= 1)
+            return;
+
+        if (exclusive.Required && passed == 0)
+        {
+            Console.Error.WriteLine(
+                $"Incorrect usage. One of {string.Join(", ",
+                    relevant.Select(r => r.Long.ToString()))} must be present.");
+
+            Console.Error.Write("Use --help for more information.");
+
+            Environment.Exit(1);
+        }
+
+        Console.Error.WriteLine(
+            $"Incorrect usage. Args {string.Join(", ",
+                relevant.Select(r => r.Long.ToString()))} are mutually exclusive.");
+
+        Console.Error.Write("Use --help for more information.");
+
+        Environment.Exit(1);
+    }
+
+    private static void ValidateInclusiveRelation(
+        InclusiveRelationAttribute inclusive,
+        Args passedArgs)
+    {
+        var relevant = passedArgs.Options
+            .Where(o => inclusive.Args.Contains(o.FieldName))
+            .ToList();
+
+        var passed = relevant.Count(r => r.Passed);
+
+        if (inclusive.Required
+            ? passed == inclusive.Args.Length
+            : passed == 0 || passed == inclusive.Args.Length)
+            return;
+
+        if (inclusive.Required && passed == 0)
+        {
+            Console.Error.WriteLine(
+                $"Incorrect usage. All of {string.Join(", ",
+                    relevant.Select(r => r.Long.ToString()))} must be present.");
+
+            Console.Error.Write("Use --help for more information.");
+
+            Environment.Exit(1);
+        }
+
+        Console.Error.WriteLine(
+            $"Incorrect usage. Args: {string.Join(", ",
+                relevant.Select(r => r.Long.ToString()))} are mutually inclusive.");
+
+        Console.Error.Write("Use --help for more information.");
+
+        Environment.Exit(1);
+    }
+
+    private static void ValidateOneOrMoreRelation(
+        OneOrMoreRelationAttribute oneOrMore,
+        Args passedArgs)
+    {
+        var relevant = passedArgs.Options
+            .Where(o => oneOrMore.Args.Contains(o.FieldName))
+            .ToList();
+
+        if (relevant.Count(r => r.Passed) >= 1)
+            return;
+
+        Console.Error.WriteLine(
+            $"Incorrect usage. At least one of {string.Join(", ",
+                relevant.Select(r => "--" + r.FieldName.SplitPascalCase().ToKebabCase()))} must be present.");
+
+        Console.Error.Write("Use --help for more information.");
+
+        Environment.Exit(1);
     }
 
     private static bool SetValueOnInstance(

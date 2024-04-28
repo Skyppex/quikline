@@ -27,15 +27,24 @@ internal static class ArgsParser
                 return parsed;
             }
 
-            if (!arg.StartsWith(@interface.LongPrefix) && arg.StartsWith(@interface.ShortPrefix))
+            if (arg.StartsWith(@interface.ShortPrefix) && !arg.StartsWith(@interface.LongPrefix))
             {
                 var shortArgs = arg[@interface.ShortPrefix.Length..];
 
                 foreach (var shortArg in shortArgs)
+                {
                     if (@interface.TryGetOption(
-                            $"{@interface.ShortPrefix}{shortArg}",
-                            out var option))
+                        $"{@interface.ShortPrefix}{shortArg}",
+                        out var option))
+                    {
                         ParseOption(shortArg.ToString(), parsed, argIterator, option);
+                        continue;
+                    }
+
+                    Console.Error.WriteLine($"Incorrect usage. Unknown option: {@interface.ShortPrefix}{shortArg}");
+                    Console.Error.Write("Use --help for more information.");
+                    Environment.Exit(1);
+                }
 
                 continue;
             }

@@ -54,9 +54,8 @@ internal static class InterfaceParser
         {
             var fieldAttributes = field.GetCustomAttributes().ToList();
 
-            List<Attribute> fieldTypeAttributes = Nullable.GetUnderlyingType(field.FieldType) is not null
-                ? Nullable.GetUnderlyingType(field.FieldType)!.GetCustomAttributes().ToList()
-                : field.FieldType.GetCustomAttributes().ToList();
+            var fieldTypeAttributes =
+                field.FieldType.GetUnderlyingType().GetCustomAttributes().ToList();
 
             ValidateSupportedType(field.FieldType, fieldTypeAttributes, field.DeclaringType, field.Name);
 
