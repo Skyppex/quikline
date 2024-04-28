@@ -1,26 +1,21 @@
 namespace Quikline.Attributes;
 
 [AttributeUsage(validOn: AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
-public abstract class Relation : Attribute
+public abstract class RelationAttribute(params string[] args) : Attribute
 {
-    public required string Name { get; init; }
+    public string[] Args { get; init; } = args;
 }
 
-public class ExclusiveRelation : Relation
+public class ExclusiveRelationAttribute(params string[] args) : RelationAttribute(args)
 {
     public bool Required { get; init; } = false;
-    public required string[] Args { get; init; }
 }
 
-public class OneOrMoreRelation : Relation
-{
-    public required string[] Args { get; init; }
-}
+public class OneOrMoreRelationAttribute(params string[] args) : RelationAttribute(args);
 
-public class InclusiveRelation : Relation
+public class InclusiveRelationAttribute(params string[] args) : RelationAttribute(args)
 {
     public bool Required { get; init; } = false;
-    public required string[] Args { get; init; }
 }
 
 // public class OneWayRelation : Relation

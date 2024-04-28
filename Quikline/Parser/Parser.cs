@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-
 using Quikline.Attributes;
 using Quikline.Parser.Models;
 
@@ -18,7 +17,138 @@ public static class Quik
         IEnumerator<string> argIterator = args.ToList().GetEnumerator();
         var passedArgs = ArgsParser.Parse(argIterator, @interface);
 
+        ValidateRelations(passedArgs, type);
+
         return (T)CreateArgs(passedArgs, @interface, type);
+    }
+
+    private static void ValidateRelations(Args passedArgs, Type type)
+    {
+        var relations = type.GetCustomAttributes<RelationAttribute>()
+            .Concat(type.GetFields()
+                .Where(f => f.FieldType.GetCustomAttribute<ArgsAttribute>() is not null)
+                .Select(f => f.FieldType)
+                .Select(t => t.GetCustomAttributes<RelationAttribute>())
+                .Where(r => r.Any())
+                .SelectMany(r => r));
+
+        foreach (var relation in relations)
+        {
+            switch (relation)
+            {
+                case ExclusiveRelationAttribute exclusive:
+                    ValidateExclusiveRelation(exclusive, passedArgs);
+                    break;
+
+                case InclusiveRelationAttribute inclusive:
+                    ValidateInclusiveRelation(inclusive, passedArgs);
+                    break;
+
+                case OneOrMoreRelationAttribute oneOrMore:
+                    ValidateOneOrMoreRelation(oneOrMore, passedArgs);
+                    break;
+            }
+        }
+    }
+
+    private static void ValidateExclusiveRelation(
+        ExclusiveRelationAttribute exclusive,
+        Args passedArgs)
+    {
+        var relevant = passedArgs.Options
+            .Where(o => exclusive.Args.Contains(o.FieldName))
+            .Select(o => (o.FieldName, o.Passed, true))
+            .Concat(passedArgs.Arguments
+                .Where(a => exclusive.Args.Contains(a.FieldName))
+                .Select(a => (a.FieldName, a.Passed, false)))
+            .ToList();
+
+        var passed = relevant.Count(r => r.Passed);
+
+        if (exclusive.Required ? passed == 1 : passed <= 1)
+            return;
+
+        if (exclusive.Required && passed == 0)
+        {
+            Console.Error.WriteLine(
+                $"Incorrect usage. One of {string.Join(", ",
+                    relevant.Select(r => (r.Item3 ? "--" : "") + r.FieldName.SplitPascalCase().ToKebabCase()))} must be present.");
+
+            Console.Error.Write("Use --help for more information.");
+
+            Environment.Exit(1);
+        }
+
+        Console.Error.WriteLine(
+            $"Incorrect usage. Args: {string.Join(", ",
+                relevant.Select(r => (r.Item3 ? "--" : "") + r.FieldName.SplitPascalCase().ToKebabCase()))} are mutually exclusive.");
+
+        Console.Error.Write("Use --help for more information.");
+
+        Environment.Exit(1);
+    }
+
+    private static void ValidateInclusiveRelation(
+        InclusiveRelationAttribute inclusive,
+        Args passedArgs)
+    {
+        var relevant = passedArgs.Options
+            .Where(o => inclusive.Args.Contains(o.FieldName))
+            .Select(o => (o.FieldName, o.Passed, true))
+            .Concat(passedArgs.Arguments
+                .Where(a => inclusive.Args.Contains(a.FieldName))
+                .Select(a => (a.FieldName, a.Passed, false)))
+            .ToList();
+
+        var passed = relevant.Count(r => r.Passed);
+
+        if (inclusive.Required
+            ? passed == inclusive.Args.Length
+            : passed == 0 || passed == inclusive.Args.Length)
+            return;
+
+        if (inclusive.Required && passed == 0)
+        {
+            Console.Error.WriteLine(
+                $"Incorrect usage. All of {string.Join(", ",
+                    relevant.Select(r => (r.Item3 ? "--" : "") + r.FieldName.SplitPascalCase().ToKebabCase()))} must be present.");
+
+            Console.Error.Write("Use --help for more information.");
+
+            Environment.Exit(1);
+        }
+
+        Console.Error.WriteLine(
+            $"Incorrect usage. Args: {string.Join(", ",
+                relevant.Select(r => (r.Item3 ? "--" : "") + r.FieldName.SplitPascalCase().ToKebabCase()))} are mutually inclusive.");
+
+        Console.Error.Write("Use --help for more information.");
+
+        Environment.Exit(1);
+    }
+
+    private static void ValidateOneOrMoreRelation(
+        OneOrMoreRelationAttribute oneOrMore,
+        Args passedArgs)
+    {
+        var relevant = passedArgs.Options
+            .Where(o => oneOrMore.Args.Contains(o.FieldName))
+            .Select(o => (o.FieldName, o.Passed, true))
+            .Concat(passedArgs.Arguments
+                .Where(a => oneOrMore.Args.Contains(a.FieldName))
+                .Select(a => (a.FieldName, a.Passed, false)))
+            .ToList();
+
+        if (relevant.Count(r => r.Passed) >= 1)
+            return;
+
+        Console.Error.WriteLine(
+            $"Incorrect usage. At least one of {string.Join(", ",
+                relevant.Select(r => (r.Item3 ? "--" : "") + r.FieldName.SplitPascalCase().ToKebabCase()))} must be present.");
+
+        Console.Error.Write("Use --help for more information.");
+
+        Environment.Exit(1);
     }
 
     private static object CreateArgs(
@@ -50,7 +180,9 @@ public static class Quik
         {
             var instance = Activator.CreateInstance(type)!;
             var subcommandType = passedArgs.Subcommand.CommandType;
-            var subcommandInterface = @interface.Subcommands.Single(s => s.CommandName == subcommandType.Name);
+
+            var subcommandInterface =
+                @interface.Subcommands.Single(s => s.CommandName == subcommandType.Name);
 
             var subcommandUserArgs = CreateSubcommandUserArgs(
                 passedArgs.Subcommand,
@@ -60,9 +192,9 @@ public static class Quik
             SetValueOnInstance(type, subcommandType, instance, subcommandUserArgs);
 
             if (!MissingRequired(
-                    @interface,
-                    passedArgs.Subcommand,
-                    out var subcommandMissing))
+                @interface,
+                passedArgs.Subcommand,
+                out var subcommandMissing))
                 return instance;
 
             Console.Error.WriteLine(
@@ -76,7 +208,9 @@ public static class Quik
         if (!MissingRequired(@interface, passedArgs, out var missing))
             return CreateUserArgs(passedArgs.CommandType, passedArgs);
 
-        Console.Error.WriteLine($"Incorrect usage. Missing required options: {string.Join(",", missing)}");
+        Console.Error.WriteLine(
+            $"Incorrect usage. Missing required options: {string.Join(",", missing)}");
+
         Console.Error.Write("Use --help for more information.");
         Environment.Exit(1);
         return default;
@@ -97,10 +231,10 @@ public static class Quik
                 var subInstance = Activator.CreateInstance(field.FieldType)!;
 
                 if (SetValueOnInstance(
-                        field.FieldType,
-                        subcommandType,
-                        subInstance,
-                        subcommandUserArgs))
+                    field.FieldType,
+                    subcommandType,
+                    subInstance,
+                    subcommandUserArgs))
                 {
                     field.SetValue(instance, subInstance);
                     return true;
