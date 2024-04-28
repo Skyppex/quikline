@@ -5,24 +5,24 @@ namespace Quikline.Parser;
 
 internal static class TypeExtensions
 {
-    public static Type GetUnderlyingType(this Type fieldType) => Nullable.GetUnderlyingType(fieldType) ?? fieldType;
+    public static Type GetUnderlyingType(this Type fieldType) => Nullable.GetUnderlyingType(fieldType)?.GetUnderlyingType() ?? fieldType;
     
     public static void PrintUsageName(this Type type)
     {
         if (type.IsEnum)
         {
-            string[] names = Enum.GetNames(type);
+            var names = Enum.GetNames(type);
             
             for (var i = 0; i < names.Length; i++)
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Out.Write(names[i].SplitPascalCase().ToKebabCase());
-                
-                if (i < names.Length - 1)
-                {
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    Console.Out.Write("|");
-                }
+
+                if (i >= names.Length - 1)
+                    continue;
+
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Out.Write("|");
             }
             
             return;
