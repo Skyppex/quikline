@@ -115,6 +115,10 @@ public static class Quik
                 case OneOrMoreRelationAttribute oneOrMore:
                     ValidateOneOrMoreRelation(oneOrMore, passedArgs);
                     break;
+                
+                case OneWayRelationAttribute oneWay:
+                    ValidateOneWayRelation(oneWay, passedArgs);
+                    break;
             }
         }
     }
@@ -204,6 +208,26 @@ public static class Quik
 
         Console.Error.Write("Use --help for more information.");
 
+        Environment.Exit(1);
+    }
+
+    private static void ValidateOneWayRelation(
+        OneWayRelationAttribute oneWay,
+        Args passedArgs)
+    {
+        var fromOption = passedArgs.Options
+            .First(o => o.FieldName == oneWay.From);
+        
+        var toOption = passedArgs.Options
+            .First(o => o.FieldName == oneWay.To);
+
+        if (toOption.Passed || !fromOption.Passed)
+            return;
+
+        Console.Error.WriteLine(
+            $"Incorrect usage. {fromOption.Long} must be passed with {toOption.Long}.");
+        Console.Error.Write("Use --help for more information.");
+            
         Environment.Exit(1);
     }
 
