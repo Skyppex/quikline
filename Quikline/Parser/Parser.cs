@@ -98,13 +98,7 @@ public static class Quik
 
     private static void ValidateRelations(Args passedArgs, Type type)
     {
-        var relations = type.GetCustomAttributes<RelationAttribute>()
-            .Concat(type.GetFields()
-                .Where(f => f.FieldType.GetCustomAttribute<ArgsAttribute>() is not null)
-                .Select(f => f.FieldType)
-                .Select(t => t.GetCustomAttributes<RelationAttribute>())
-                .Where(r => r.Any())
-                .SelectMany(r => r));
+        var relations = type.GetRelations();
 
         foreach (var relation in relations)
         {

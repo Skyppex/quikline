@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Text;
 
+using Quikline.Attributes;
+
 namespace Quikline.Parser;
 
 internal static class TypeExtensions
@@ -39,6 +41,16 @@ internal static class TypeExtensions
         var info = new NullabilityInfoContext().Create(field);
         return info.ReadState == NullabilityState.Nullable;
     }
+    
+    public static List<RelationAttribute> GetRelations(this Type type) =>
+        type.GetCustomAttributes<RelationAttribute>()
+            .Concat(type.GetFields()
+                .Select(f => f.FieldType)
+                .Where(t => t.GetCustomAttribute<ArgsAttribute>() is not null)
+                .Select(t => t.GetCustomAttributes<RelationAttribute>())
+                .Where(r => r.Any())
+                .SelectMany(r => r))
+            .ToList();
 }
 
 internal static class StringExtensions

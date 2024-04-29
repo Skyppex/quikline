@@ -42,6 +42,10 @@ internal class Interface(ICommand command, Type commandType, string? commandName
         Arguments.AddRange(@interface.Arguments);
         Subcommands.AddRange(@interface.Subcommands);
     }
+    
+    public string GetPrefixedNameForOption(string name) => 
+        Options.First(o => o.Long.Name.Value == name.SplitPascalCase().ToKebabCase())
+            .Long.ToString();
 }
 
 internal readonly record struct Option(

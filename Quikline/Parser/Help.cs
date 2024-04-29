@@ -1,4 +1,6 @@
 ﻿using System.Text;
+
+using Quikline.Attributes;
 using Quikline.Parser.Models;
 
 namespace Quikline.Parser;
@@ -23,50 +25,15 @@ internal static class Help
             PrintSubcommands(subcommands);
 
         if (arguments.Count > 0)
-        {
-            Console.Out.WriteLine("");
-            Console.Out.WriteLine("");
+            PrintArguments(arguments);
 
-            using (new Color(ConsoleColor.DarkGreen))
-                Console.Out.Write("Arguments");
+        if (options.Count > 0)
+            PrintOptions(options);
 
-            using (new Color(ConsoleColor.Gray))
-            {
-                Console.Out.WriteLine(":");
+        var relations = @interface.CommandType.GetRelations();
 
-                for (var i = 0; i < arguments.Count; i++)
-                {
-                    var argument = arguments[i];
-                    argument.PrintUsage();
-
-                    if (i < arguments.Count - 1)
-                        Console.Out.WriteLine();
-                }
-            }
-        }
-
-        if (options.Count <= 0)
-            return;
-
-        Console.Out.WriteLine("");
-        Console.Out.WriteLine("");
-        
-        using (new Color(ConsoleColor.DarkGreen))
-            Console.Out.Write("Options");
-
-        using (new Color(ConsoleColor.Gray))
-        {
-            Console.Out.WriteLine(":");
-
-            for (var i = 0; i < options.Count; i++)
-            {
-                var option = options[i];
-                option.PrintUsage();
-
-                if (i < options.Count - 1)
-                    Console.Out.WriteLine();
-            }
-        }
+        if (relations.Count > 0)
+            PrintRelations(relations, @interface);
     }
 
     private static void PrintUsage(Interface @interface)
@@ -172,6 +139,76 @@ internal static class Help
             {
                 Console.Out.Write(" - ");
                 Console.Out.Write(subcommand.Description);
+            }
+        }
+    }
+
+    private static void PrintArguments(List<Argument> arguments)
+    {
+        Console.Out.WriteLine("");
+        Console.Out.WriteLine("");
+
+        using (new Color(ConsoleColor.DarkGreen))
+            Console.Out.Write("Arguments");
+
+        using (new Color(ConsoleColor.Gray))
+        {
+            Console.Out.WriteLine(":");
+
+            for (var i = 0; i < arguments.Count; i++)
+            {
+                var argument = arguments[i];
+                argument.PrintUsage();
+
+                if (i < arguments.Count - 1)
+                    Console.Out.WriteLine();
+            }
+        }
+    }
+
+    private static void PrintOptions(List<Option> options)
+    {
+        Console.Out.WriteLine("");
+        Console.Out.WriteLine("");
+        
+        using (new Color(ConsoleColor.DarkGreen))
+            Console.Out.Write("Options");
+
+        using (new Color(ConsoleColor.Gray))
+        {
+            Console.Out.WriteLine(":");
+
+            for (var i = 0; i < options.Count; i++)
+            {
+                var option = options[i];
+                option.PrintUsage();
+
+                if (i < options.Count - 1)
+                    Console.Out.WriteLine();
+            }
+        }
+    }
+
+    private static void PrintRelations(List<RelationAttribute> relations, Interface @interface)
+    {
+        relations.Sort(new RelationComparer());
+        Console.Out.WriteLine("");
+        Console.Out.WriteLine("");
+        
+        using (new Color(ConsoleColor.DarkGreen))
+            Console.Out.Write("Relations");
+
+        using (new Color(ConsoleColor.Gray))
+        {
+            Console.Out.WriteLine(":");
+            
+            for (int i = 0; i < relations.Count; i++)
+            {
+                var relation = relations[i];
+                relation.PrintUsage(@interface);
+                
+                if (i < relations.Count - 1)
+                    Console.Out.WriteLine();
             }
         }
     }
