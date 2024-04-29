@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using System.Text;
-
 using Quikline.Attributes;
 using Quikline.Parser;
 
@@ -11,11 +10,16 @@ Console.WriteLine(a);
 // ReSharper disable UnassignedReadonlyField
 
 [Command(Version = true, Description = "A test CLI program.")]
+[ExclusiveRelation(nameof(CaseSensitive), nameof(CaseInsensitive), Required = true)]
+[OneOrMoreRelation(nameof(None), nameof(Single))]
 public readonly struct TestArgs
 {
+    [Option(Short = '0', Description = "No elements.")]
+    public readonly bool None;
+
     [Option(Short = '1', Description = "Single element.")]
     public readonly bool Single;
-    
+
     [Option(Short = 'f', Description = "Force the operation.")]
     public readonly bool Force;
 
@@ -29,7 +33,7 @@ public readonly struct TestArgs
     public readonly bool CaseSensitive;
 
     [Argument(Description = "The file to process.")]
-    public readonly string File;
+    public readonly string? File;
 
     [Argument(Description = "The other file to process.")]
     public readonly string? OtherFile;
@@ -59,7 +63,7 @@ public readonly struct TestArgs
                 builder.Append(subThis);
                 continue;
             }
-            
+
             builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
         }
 
@@ -69,6 +73,7 @@ public readonly struct TestArgs
 }
 
 [Args]
+[InclusiveRelation(nameof(Verbose), nameof(LogLevel))]
 public readonly struct LoggingArgs
 {
     [Option(Short = 'v', Description = "Enable verbose output.")]
@@ -76,8 +81,6 @@ public readonly struct LoggingArgs
 
     [Option(Short = 'l', Description = "LogLevel.", Default = "info")]
     public readonly LogLevel LogLevel;
-    
-    public readonly LoggingArgs2 LoggingArgs2;
 
     public override string ToString()
     {
@@ -93,38 +96,7 @@ public readonly struct LoggingArgs
                 builder.Append(subThis);
                 continue;
             }
-            
-            builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
-        }
 
-        return builder.ToString();
-    }
-}
-
-[Args]
-public readonly struct LoggingArgs2
-{
-    [Option(Description = "Number.", Default = 42)]
-    public readonly int Number;
-
-    [Argument(Description = "Test", Default = "Hello, World!")]
-    public readonly string Text;
-    
-    public override string ToString()
-    {
-        var fields = typeof(LoggingArgs2).GetFields();
-
-        var builder = new StringBuilder();
-
-        foreach (var field in fields)
-        {
-            if (field.FieldType.GetCustomAttribute<ArgsAttribute>() is not null)
-            {
-                var subThis = field.GetValue(this)!;
-                builder.Append(subThis);
-                continue;
-            }
-            
             builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
         }
 
@@ -136,7 +108,7 @@ public readonly struct LoggingArgs2
 public readonly struct Commands
 {
     public readonly Sub? Sub;
-    
+
     public override string ToString()
     {
         var fields = typeof(Commands).GetFields();
@@ -151,7 +123,7 @@ public readonly struct Commands
                 builder.Append(subThis);
                 continue;
             }
-            
+
             builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
         }
 
@@ -160,16 +132,20 @@ public readonly struct Commands
 }
 
 [Subcommand(Description = "A test subcommand.")]
+[OneOrMoreRelation(nameof(Woofer), nameof(Poofer))]
 public readonly struct Sub
 {
     [Option(Short = 'w', Description = "Woofer.")]
     public readonly bool Woofer;
 
+    [Option(Short = 'p', Description = "Poofer.")]
+    public readonly bool Poofer;
+
     [Argument(Description = "The file to process.", Default = 10f)]
     public readonly float Threshold;
 
     public readonly SubSub? SubSub;
-    
+
     public override string ToString()
     {
         var fields = typeof(Sub).GetFields();
@@ -184,7 +160,7 @@ public readonly struct Sub
                 builder.Append(subThis);
                 continue;
             }
-            
+
             builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
         }
 
@@ -193,14 +169,18 @@ public readonly struct Sub
 }
 
 [Subcommand(Description = "A test subsubcommand.")]
+[OneOrMoreRelation(nameof(Woofer), nameof(Poofer))]
 public readonly struct SubSub
 {
     [Option(Short = 'w', Description = "Woofer.")]
     public readonly bool Woofer;
+    
+    [Option(Short = 'p', Description = "Poofer.")]
+    public readonly bool Poofer;
 
     [Argument(Description = "The file to process.")]
     public readonly float? Threshold;
-    
+
     public override string ToString()
     {
         var fields = typeof(SubSub).GetFields();
@@ -215,7 +195,7 @@ public readonly struct SubSub
                 builder.Append(subThis);
                 continue;
             }
-            
+
             builder.Append($"    {field.Name}: {field.GetValue(this)},\n");
         }
 

@@ -2,18 +2,18 @@
 
 namespace Quikline.Parser.Models;
 
-internal class Interface(CommandAttribute commandAttribute, Type commandType, string? commandName = null, Interface? parent = null)
+internal class Interface(ICommand command, Type commandType, string? commandName = null, Interface? parent = null)
 {
     public static readonly string ProgramName =
         Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
 
     public readonly string CommandName = commandName ?? ProgramName;
     public readonly Type CommandType = commandType;
-    public Interface? Parent = parent;
+    public readonly Interface? Parent = parent;
     
-    public readonly string? Description = commandAttribute.Description;
-    public readonly Prefix ShortPrefix = new(commandAttribute.ShortPrefix);
-    public readonly Prefix LongPrefix = new(commandAttribute.LongPrefix);
+    public readonly string? Description = command.Description;
+    public readonly Prefix ShortPrefix = new(command.ShortPrefix);
+    public readonly Prefix LongPrefix = new(command.LongPrefix);
     
     public List<Option> Options { get; set; } = [];
     public List<Argument> Arguments { get; set; } = [];
@@ -42,6 +42,10 @@ internal class Interface(CommandAttribute commandAttribute, Type commandType, st
         Arguments.AddRange(@interface.Arguments);
         Subcommands.AddRange(@interface.Subcommands);
     }
+    
+    public string GetPrefixedNameForOption(string name) => 
+        Options.First(o => o.Long.Name.Value == name.SplitPascalCase().ToKebabCase())
+            .Long.ToString();
 }
 
 internal readonly record struct Option(

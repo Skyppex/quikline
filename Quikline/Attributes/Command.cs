@@ -19,7 +19,7 @@ internal interface ICommand
 }
 
 [AttributeUsage(validOn: AttributeTargets.Struct)]
-public sealed class CommandAttribute : Attribute, ICommand
+public class CommandAttribute : Attribute, ICommand
 {
     public string? Description { get; init; }
     public string ShortPrefix { get; init; } = "-";
@@ -35,7 +35,7 @@ public sealed class CommandAttribute : Attribute, ICommand
 }
 
 [AttributeUsage(validOn: AttributeTargets.Struct)]
-public sealed class SubcommandAttribute : Attribute, ICommand
+public class SubcommandAttribute : Attribute, ICommand
 {
     public string? Description { get; init; }
     public string ShortPrefix { get; init; } = "-";
