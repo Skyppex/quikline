@@ -10,9 +10,9 @@ Console.WriteLine(a);
 // ReSharper disable UnassignedReadonlyField
 
 [Command(Version = true, Description = "A test CLI program.")]
-[ExclusiveRelation(nameof(CaseSensitive), nameof(CaseInsensitive))]
-[OneOrMoreRelation(nameof(None), nameof(Single))]
-[OneWayRelation(From = nameof(Name), To = nameof(CaseSensitive))]
+[ExclusiveRelation("casing", nameof(CaseSensitive), nameof(CaseInsensitive))]
+[OneOrMoreRelation("scripting", nameof(None), nameof(Single))]
+[OneWayRelation("naming", From = nameof(Name), To = nameof(CaseSensitive))]
 public readonly struct TestArgs
 {
     [Option(Short = '0', Description = "No elements.")]
@@ -74,7 +74,7 @@ public readonly struct TestArgs
 }
 
 [Args]
-[InclusiveRelation(nameof(Verbose), nameof(LogLevel))]
+[InclusiveRelation("logging", nameof(Verbose), nameof(LogLevel))]
 public readonly struct LoggingArgs
 {
     [Option(Short = 'v', Description = "Enable verbose output.")]
@@ -133,7 +133,7 @@ public readonly struct Commands
 }
 
 [Subcommand(Description = "A test subcommand.")]
-[OneOrMoreRelation(nameof(Woofer), nameof(Poofer))]
+[OneOrMoreRelation("oof", nameof(Woofer), nameof(Poofer))]
 public readonly struct Sub
 {
     [Option(Short = 'w', Description = "Woofer.")]
@@ -170,14 +170,10 @@ public readonly struct Sub
 }
 
 [Subcommand(Description = "A test subsubcommand.")]
-[OneOrMoreRelation(nameof(Woofer), nameof(Poofer))]
 public readonly struct SubSub
 {
     [Option(Short = 'w', Description = "Woofer.")]
     public readonly bool Woofer;
-    
-    [Option(Short = 'p', Description = "Poofer.")]
-    public readonly bool Poofer;
 
     [Argument(Description = "The file to process.")]
     public readonly float? Threshold;

@@ -4,12 +4,14 @@ using Quikline.Parser.Models;
 namespace Quikline.Attributes;
 
 [AttributeUsage(validOn: AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
-public abstract class RelationAttribute : Attribute
+public abstract class RelationAttribute(string name) : Attribute
 {
+    public string Name { get; } = name;
+    
     internal abstract void PrintUsage(Interface @interface);
 }
 
-public class ExclusiveRelationAttribute(params string[] args) : RelationAttribute
+public class ExclusiveRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
     public bool Required { get; init; } = false;
     public string[] Args { get; init; } = args;
@@ -53,7 +55,7 @@ public class ExclusiveRelationAttribute(params string[] args) : RelationAttribut
     }
 }
 
-public class OneOrMoreRelationAttribute(params string[] args) : RelationAttribute
+public class OneOrMoreRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
     public string[] Args { get; init; } = args;
     
@@ -91,7 +93,7 @@ public class OneOrMoreRelationAttribute(params string[] args) : RelationAttribut
     }
 }
 
-public class InclusiveRelationAttribute(params string[] args) : RelationAttribute
+public class InclusiveRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
     public bool Required { get; init; } = false;
     public string[] Args { get; init; } = args;
@@ -135,7 +137,7 @@ public class InclusiveRelationAttribute(params string[] args) : RelationAttribut
     }
 }
 
-public class OneWayRelationAttribute : RelationAttribute
+public class OneWayRelationAttribute(string name) : RelationAttribute(name)
 {
     public required string From { get; init; }
     public required string To { get; init; }
