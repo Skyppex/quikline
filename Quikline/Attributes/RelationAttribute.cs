@@ -4,20 +4,19 @@ using Quikline.Parser.Models;
 namespace Quikline.Attributes;
 
 [AttributeUsage(validOn: AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
-public abstract class RelationAttribute(params string[] args) : Attribute
+public abstract class RelationAttribute : Attribute
 {
-    public string[] Args { get; init; } = args;
-
     internal abstract void PrintUsage(Interface @interface);
 }
 
-public class ExclusiveRelationAttribute(params string[] args) : RelationAttribute(args)
+public class ExclusiveRelationAttribute(params string[] args) : RelationAttribute
 {
     public bool Required { get; init; } = false;
-    
+    public string[] Args { get; init; } = args;
+
     internal override void PrintUsage(Interface @interface)
     {
-        var names = args;
+        var names = Args;
         
         Console.Out.Write("  ");
         
@@ -54,11 +53,13 @@ public class ExclusiveRelationAttribute(params string[] args) : RelationAttribut
     }
 }
 
-public class OneOrMoreRelationAttribute(params string[] args) : RelationAttribute(args)
+public class OneOrMoreRelationAttribute(params string[] args) : RelationAttribute
 {
+    public string[] Args { get; init; } = args;
+    
     internal override void PrintUsage(Interface @interface)
     {
-        var names = args;
+        var names = Args;
         
         Console.Out.Write("  ");
         
@@ -90,13 +91,14 @@ public class OneOrMoreRelationAttribute(params string[] args) : RelationAttribut
     }
 }
 
-public class InclusiveRelationAttribute(params string[] args) : RelationAttribute(args)
+public class InclusiveRelationAttribute(params string[] args) : RelationAttribute
 {
     public bool Required { get; init; } = false;
-    
+    public string[] Args { get; init; } = args;
+
     internal override void PrintUsage(Interface @interface)
     {
-        var names = args;
+        var names = Args;
         
         Console.Out.Write("  ");
         
@@ -133,12 +135,32 @@ public class InclusiveRelationAttribute(params string[] args) : RelationAttribut
     }
 }
 
-// public class OneWayRelation : Relation
-// {
-//     public bool Required { get; init; } = false;
-//     public required string[] From { get; init; }
-//     public required string[] To { get; init; }
-// }
+public class OneWayRelationAttribute : RelationAttribute
+{
+    public required string From { get; init; }
+    public required string To { get; init; }
+    
+    internal override void PrintUsage(Interface @interface)
+    {
+        Console.Out.Write("  ");
+        
+        using (new Help.Color(ConsoleColor.DarkCyan))
+            Console.Out.Write("One way");
+        
+        Console.Out.Write(" - (");
+
+
+        using (new Help.Color(ConsoleColor.Blue))
+            Console.Out.Write(@interface.GetPrefixedNameForOption(From));
+        
+        Console.Out.Write(" -> ");
+        
+        using (new Help.Color(ConsoleColor.Blue))
+            Console.Out.Write(@interface.GetPrefixedNameForOption(To));
+
+        Console.Out.Write(")");
+    }
+}
 
 internal sealed class RelationComparer : IComparer<RelationAttribute>
 {
@@ -155,6 +177,8 @@ internal sealed class RelationComparer : IComparer<RelationAttribute>
             (_, ExclusiveRelationAttribute) => 1,
             (OneOrMoreRelationAttribute, _) => -1,
             (_, OneOrMoreRelationAttribute) => 1,
+            (OneWayRelationAttribute, _) => -1,
+            (_, OneWayRelationAttribute) => 1,
             _ => 0
         };
     }

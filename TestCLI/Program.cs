@@ -10,8 +10,9 @@ Console.WriteLine(a);
 // ReSharper disable UnassignedReadonlyField
 
 [Command(Version = true, Description = "A test CLI program.")]
-[ExclusiveRelation(nameof(CaseSensitive), nameof(CaseInsensitive), Required = true)]
+[ExclusiveRelation(nameof(CaseSensitive), nameof(CaseInsensitive))]
 [OneOrMoreRelation(nameof(None), nameof(Single))]
+[OneWayRelation(From = nameof(Name), To = nameof(CaseSensitive))]
 public readonly struct TestArgs
 {
     [Option(Short = '0', Description = "No elements.")]
