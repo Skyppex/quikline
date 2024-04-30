@@ -43,9 +43,16 @@ internal class Interface(ICommand command, Type commandType, string? commandName
         Subcommands.AddRange(@interface.Subcommands);
     }
     
-    public string GetPrefixedNameForOption(string name) => 
-        Options.First(o => o.Long.Name.Value == name.SplitPascalCase().ToKebabCase())
-            .Long.ToString();
+    public string? GetPrefixedNameForOption(string name)
+    {
+        var firstOrDefault = Options.FirstOrDefault(
+            o => o.Long.Name.Value == name.SplitPascalCase().ToKebabCase());
+
+        if (firstOrDefault == default)
+            return null;
+        
+        return firstOrDefault.Long.ToString();
+    }
 }
 
 internal readonly record struct Option(
@@ -159,8 +166,20 @@ internal readonly record struct Argument(
                 if (Optional)
                 {
                     Console.Out.Write(" (");
+
                     using (new Help.Color(ConsoleColor.DarkYellow))
-                        Console.Out.Write("optional");
+                    {
+                        if (Value is null)
+                            Console.Out.Write("optional");
+                        else
+                        {
+                            Console.Out.Write("default: ");
+                            
+                            using (new Help.Color(ConsoleColor.DarkBlue))
+                                Console.Out.Write(Value);
+                        }
+                    }
+                    
                     Console.Out.Write(")");
                 }
             }

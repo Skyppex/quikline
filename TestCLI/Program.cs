@@ -11,8 +11,9 @@ Console.WriteLine(a);
 
 [Command(Version = true, Description = "A test CLI program.")]
 [ExclusiveRelation("casing", nameof(CaseSensitive), nameof(CaseInsensitive))]
-[OneOrMoreRelation("scripting", nameof(None), nameof(Single))]
-[OneWayRelation("naming", From = nameof(Name), To = nameof(CaseSensitive))]
+[InclusiveRelation("rel", nameof(Force), "scripting")]
+[OneOrMoreRelation("scripting", nameof(None), "casing")]
+[OneWayRelation("naming", From = "casing", To = "logging")]
 public readonly struct TestArgs
 {
     [Option(Short = '0', Description = "No elements.")]
@@ -38,6 +39,9 @@ public readonly struct TestArgs
 
     [Argument(Description = "The other file to process.")]
     public readonly string? OtherFile;
+    
+    [Argument(Description = "The other file to process.", Default = 100)]
+    public readonly int Temperature;
 
     [Rest(Description = "The rest of the arguments.")]
     public readonly string Rest;
@@ -134,6 +138,9 @@ public readonly struct Commands
 
 [Subcommand(Description = "A test subcommand.")]
 [OneOrMoreRelation("oof", nameof(Woofer), nameof(Poofer))]
+[ExclusiveRelation("casing", nameof(CaseSensitive), nameof(CaseInsensitive))]
+[InclusiveRelation("rel", nameof(Force), "scripting")]
+[OneOrMoreRelation("scripting", nameof(None), "casing")]
 public readonly struct Sub
 {
     [Option(Short = 'w', Description = "Woofer.")]
@@ -141,6 +148,24 @@ public readonly struct Sub
 
     [Option(Short = 'p', Description = "Poofer.")]
     public readonly bool Poofer;
+
+    [Option(Short = '0', Description = "No elements.")]
+    public readonly bool None;
+
+    [Option(Short = '1', Description = "Single element.")]
+    public readonly bool Single;
+
+    [Option(Short = 'f', Description = "Force the operation.")]
+    public readonly bool Force;
+
+    [Option(Short = 'n', Description = "Name.")]
+    public readonly string Name;
+
+    [Option(Short = 's', Description = "Case insensitive.")]
+    public readonly bool CaseInsensitive;
+
+    [Option(ShortPrefix = '+', Short = 's', Description = "Case sensitive.")]
+    public readonly bool CaseSensitive;
 
     [Argument(Description = "The file to process.", Default = 10f)]
     public readonly float Threshold;

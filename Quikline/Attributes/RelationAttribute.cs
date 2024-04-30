@@ -6,6 +6,13 @@ namespace Quikline.Attributes;
 [AttributeUsage(validOn: AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
 public abstract class RelationAttribute(string name) : Attribute
 {
+    internal bool _required;
+    
+    /// <summary>
+    /// If you wish for the relation to always be present, set this to `true`.
+    /// Doing so will force the user to pass all arguments required to satisfy this relation.
+    /// </summary>
+    public bool Required { get => _required; init => _required = value; }
     public string Name { get; } = name;
     
     internal abstract void PrintUsage(Interface @interface);
@@ -13,7 +20,6 @@ public abstract class RelationAttribute(string name) : Attribute
 
 public class ExclusiveRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
-    public bool Required { get; init; } = false;
     public string[] Args { get; init; } = args;
 
     internal override void PrintUsage(Interface @interface)
@@ -21,10 +27,10 @@ public class ExclusiveRelationAttribute(string name, params string[] args) : Rel
         var names = Args;
         
         Console.Out.Write("  ");
-        
+
         using (new Help.Color(ConsoleColor.DarkCyan))
-            Console.Out.Write("Exclusive");
-        
+            Console.Out.Write(Name);
+
         Console.Out.Write(" - (");
         
         for (var i = 0; i < names.Length; i++)
@@ -32,7 +38,7 @@ public class ExclusiveRelationAttribute(string name, params string[] args) : Rel
             var name = names[i];
 
             using (new Help.Color(ConsoleColor.Blue))
-                Console.Out.Write(@interface.GetPrefixedNameForOption(name));
+                Console.Out.Write(@interface.GetPrefixedNameForOption(name) ?? name.SurroundWith("\"", "\""));
 
             if (i >= names.Length - 1)
                 continue;
@@ -64,10 +70,10 @@ public class OneOrMoreRelationAttribute(string name, params string[] args) : Rel
         var names = Args;
         
         Console.Out.Write("  ");
-        
+
         using (new Help.Color(ConsoleColor.DarkCyan))
-            Console.Out.Write("One or more");
-        
+            Console.Out.Write(Name);
+
         Console.Out.Write(" - (");
         
         for (var i = 0; i < names.Length; i++)
@@ -75,27 +81,31 @@ public class OneOrMoreRelationAttribute(string name, params string[] args) : Rel
             var name = names[i];
             
             using (new Help.Color(ConsoleColor.Blue))
-                Console.Out.Write(@interface.GetPrefixedNameForOption(name));
+                Console.Out.Write(@interface.GetPrefixedNameForOption(name) ?? name.SurroundWith("\"", "\""));
 
             if (i >= names.Length - 1)
                 continue;
 
             using (new Help.Color(ConsoleColor.Gray))
-                Console.Out.Write(" | ");
+                Console.Out.Write(" + ");
         }
         
-        Console.Out.Write(") (");
+        Console.Out.Write(")");
         
+        if (!Required)
+            return;
+
+        Console.Out.Write(" (");
+            
         using (new Help.Color(ConsoleColor.DarkRed))
             Console.Out.Write("required");
-        
+            
         Console.Out.Write(")");
     }
 }
 
 public class InclusiveRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
-    public bool Required { get; init; } = false;
     public string[] Args { get; init; } = args;
 
     internal override void PrintUsage(Interface @interface)
@@ -105,8 +115,8 @@ public class InclusiveRelationAttribute(string name, params string[] args) : Rel
         Console.Out.Write("  ");
         
         using (new Help.Color(ConsoleColor.DarkCyan))
-            Console.Out.Write("Inclusive");
-        
+            Console.Out.Write(Name);
+
         Console.Out.Write(" - (");
         
         for (var i = 0; i < names.Length; i++)
@@ -114,7 +124,7 @@ public class InclusiveRelationAttribute(string name, params string[] args) : Rel
             var name = names[i];
 
             using (new Help.Color(ConsoleColor.Blue))
-                Console.Out.Write(@interface.GetPrefixedNameForOption(name));
+                Console.Out.Write(@interface.GetPrefixedNameForOption(name) ?? name.SurroundWith("\"", "\""));
 
             if (i >= names.Length - 1)
                 continue;
@@ -147,18 +157,18 @@ public class OneWayRelationAttribute(string name) : RelationAttribute(name)
         Console.Out.Write("  ");
         
         using (new Help.Color(ConsoleColor.DarkCyan))
-            Console.Out.Write("One way");
-        
+            Console.Out.Write(Name);
+
         Console.Out.Write(" - (");
 
 
         using (new Help.Color(ConsoleColor.Blue))
-            Console.Out.Write(@interface.GetPrefixedNameForOption(From));
+            Console.Out.Write(@interface.GetPrefixedNameForOption(From) ?? From.SurroundWith("\"", "\""));
         
-        Console.Out.Write(" -> ");
+        Console.Out.Write(" > ");
         
         using (new Help.Color(ConsoleColor.Blue))
-            Console.Out.Write(@interface.GetPrefixedNameForOption(To));
+            Console.Out.Write(@interface.GetPrefixedNameForOption(To) ?? To.SurroundWith("\"", "\""));
 
         Console.Out.Write(")");
     }

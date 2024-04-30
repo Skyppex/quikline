@@ -4,13 +4,13 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>0.1.3</Version>
+        <Version>0.2.0</Version>
         <Title>Quikline</Title>
         <Authors>Brage Ingebrigtsen</Authors>
         <Description>Quikline is a command line argument parser. Define your command's interface in a structural way using attributes to provide an expressive API. By calling a single function, all the command line arguments are parsed and your structs are populated with data from the command line. Quikline automatically adds a built-in --help command with conventional formatting and simple colorization and an optional --version command. After parsing, its up to you to define your own behaviour using the structure you defined.</Description>
         <RepositoryUrl>https://github.com/Skyppex/quikline.git</RepositoryUrl>
-        <PackageTags>cli cli-parser tool command line interface parser structured</PackageTags>
-        <PackageReleaseNotes>The first release of Quikline v0.1.0.0. You can define a command, group args in sub-structs and define subcommands.</PackageReleaseNotes>
+        <PackageTags>cli cli-parser tool command line interface parser structure</PackageTags>
+        <PackageReleaseNotes>The first update of Quikline v0.2.0. You can now have relationships between options or other relationships. Four simple relations are provided: Inclsive, Exclusive, OneOrMore, and OneWay. They can be combined to create complex relations between your CLIs options</PackageReleaseNotes>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
     <ItemGroup>
