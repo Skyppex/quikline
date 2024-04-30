@@ -55,6 +55,9 @@ internal static class TypeExtensions
 
 internal static class StringExtensions
 {
+    public static string SurroundWith(this string value, string prefix, string suffix) =>
+        $"{prefix}{value}{suffix}";
+    
     public static string[] SplitPascalCase(this string value)
     {
         var result = new List<string>();

@@ -39,13 +39,24 @@ Each of these have several properties for you to fill in to customize your API, 
   - Discriminates between lower and upper case short names (e.g. `-v` and `-V` are different)
   - Provide a description which is used in the help text
 
+#### Relations
+
+- Inclusive
+  - All options in the group must be provided
+- Exclusive
+  - Only one option in the group can be provided
+- OneOrMore
+  - At least one option in the group must be provided
+- OneWay
+  - If option 'a' is provided option 'b' must also be provided, but not the other way around
+
 ## Examples
 
 ### Simple command
 ```csharp
 [Command(Version=true, Description="Create some tea")]
 public readonly struct Tea {  
-    [Option(Short='m', Description="Add a number of sugar cubes to the tea")]
+    [Option(Short='s', Description="Add a number of sugar cubes to the tea")]
     public readonly int Sugar;
     
     [Option(Short='m', Description="Add milk to the tea")]
@@ -79,7 +90,7 @@ public readonly struct Beverage {
 
 [Subcommand(Description="Create some tea")]
 public readonly struct Tea {  
-    [Option(Short='m', Description="Add a number of sugar cubes to the tea")]
+    [Option(Short='s', Description="Add a number of sugar cubes to the tea")]
     public readonly int Sugar;
     
     [Option(Short='m', Description="Add milk to the tea")]
@@ -119,6 +130,37 @@ public enum CoffeeType {
     Latte,
     Cappuccino,
     Mocha
+}
+```
+
+### Command with relations
+```csharp
+[Command(Version = true, Description="Create a beverage")]
+// This ensures that if you want extra milk, you also have to have milk... which just makes sense
+[OneWayRelation("milk", From = nameof(ExtraMilk), To = nameof(Milk))]
+public readonly struct Tea {  
+    [Option(Short='s', Description="Add a number of sugar cubes to the tea")]
+    public readonly int Sugar;
+    
+    [Option(Short='m', Description="Add milk to the tea")]
+    public readonly bool Milk;
+    
+    [Option(Short='M', Description="Add more milk to the tea")]
+    public readonly bool ExtraMilk;
+    
+    [Argument(Description="The type of tea")]
+    public readonly TeaType TeaType;
+    
+    [Argument(Description="The temperature of the water", Default = 90)]
+    public readonly int Temperature;
+}
+
+public enum TeaType {
+    Green,
+    Black,
+    White,
+    Oolong,
+    Herbal
 }
 ```
 

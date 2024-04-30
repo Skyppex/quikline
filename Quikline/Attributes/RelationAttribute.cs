@@ -4,14 +4,22 @@ using Quikline.Parser.Models;
 namespace Quikline.Attributes;
 
 [AttributeUsage(validOn: AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
-public abstract class RelationAttribute : Attribute
+public abstract class RelationAttribute(string name) : Attribute
 {
+    internal bool _required;
+    
+    /// <summary>
+    /// If you wish for the relation to always be present, set this to `true`.
+    /// Doing so will force the user to pass all arguments required to satisfy this relation.
+    /// </summary>
+    public bool Required { get => _required; init => _required = value; }
+    public string Name { get; } = name;
+    
     internal abstract void PrintUsage(Interface @interface);
 }
 
-public class ExclusiveRelationAttribute(params string[] args) : RelationAttribute
+public class ExclusiveRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
-    public bool Required { get; init; } = false;
     public string[] Args { get; init; } = args;
 
     internal override void PrintUsage(Interface @interface)
@@ -19,10 +27,10 @@ public class ExclusiveRelationAttribute(params string[] args) : RelationAttribut
         var names = Args;
         
         Console.Out.Write("  ");
-        
+
         using (new Help.Color(ConsoleColor.DarkCyan))
-            Console.Out.Write("Exclusive");
-        
+            Console.Out.Write(Name);
+
         Console.Out.Write(" - (");
         
         for (var i = 0; i < names.Length; i++)
@@ -30,7 +38,7 @@ public class ExclusiveRelationAttribute(params string[] args) : RelationAttribut
             var name = names[i];
 
             using (new Help.Color(ConsoleColor.Blue))
-                Console.Out.Write(@interface.GetPrefixedNameForOption(name));
+                Console.Out.Write(@interface.GetPrefixedNameForOption(name) ?? name.SurroundWith("\"", "\""));
 
             if (i >= names.Length - 1)
                 continue;
@@ -53,7 +61,7 @@ public class ExclusiveRelationAttribute(params string[] args) : RelationAttribut
     }
 }
 
-public class OneOrMoreRelationAttribute(params string[] args) : RelationAttribute
+public class OneOrMoreRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
     public string[] Args { get; init; } = args;
     
@@ -62,10 +70,10 @@ public class OneOrMoreRelationAttribute(params string[] args) : RelationAttribut
         var names = Args;
         
         Console.Out.Write("  ");
-        
+
         using (new Help.Color(ConsoleColor.DarkCyan))
-            Console.Out.Write("One or more");
-        
+            Console.Out.Write(Name);
+
         Console.Out.Write(" - (");
         
         for (var i = 0; i < names.Length; i++)
@@ -73,27 +81,31 @@ public class OneOrMoreRelationAttribute(params string[] args) : RelationAttribut
             var name = names[i];
             
             using (new Help.Color(ConsoleColor.Blue))
-                Console.Out.Write(@interface.GetPrefixedNameForOption(name));
+                Console.Out.Write(@interface.GetPrefixedNameForOption(name) ?? name.SurroundWith("\"", "\""));
 
             if (i >= names.Length - 1)
                 continue;
 
             using (new Help.Color(ConsoleColor.Gray))
-                Console.Out.Write(" | ");
+                Console.Out.Write(" + ");
         }
         
-        Console.Out.Write(") (");
+        Console.Out.Write(")");
         
+        if (!Required)
+            return;
+
+        Console.Out.Write(" (");
+            
         using (new Help.Color(ConsoleColor.DarkRed))
             Console.Out.Write("required");
-        
+            
         Console.Out.Write(")");
     }
 }
 
-public class InclusiveRelationAttribute(params string[] args) : RelationAttribute
+public class InclusiveRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
-    public bool Required { get; init; } = false;
     public string[] Args { get; init; } = args;
 
     internal override void PrintUsage(Interface @interface)
@@ -103,8 +115,8 @@ public class InclusiveRelationAttribute(params string[] args) : RelationAttribut
         Console.Out.Write("  ");
         
         using (new Help.Color(ConsoleColor.DarkCyan))
-            Console.Out.Write("Inclusive");
-        
+            Console.Out.Write(Name);
+
         Console.Out.Write(" - (");
         
         for (var i = 0; i < names.Length; i++)
@@ -112,7 +124,7 @@ public class InclusiveRelationAttribute(params string[] args) : RelationAttribut
             var name = names[i];
 
             using (new Help.Color(ConsoleColor.Blue))
-                Console.Out.Write(@interface.GetPrefixedNameForOption(name));
+                Console.Out.Write(@interface.GetPrefixedNameForOption(name) ?? name.SurroundWith("\"", "\""));
 
             if (i >= names.Length - 1)
                 continue;
@@ -135,7 +147,7 @@ public class InclusiveRelationAttribute(params string[] args) : RelationAttribut
     }
 }
 
-public class OneWayRelationAttribute : RelationAttribute
+public class OneWayRelationAttribute(string name) : RelationAttribute(name)
 {
     public required string From { get; init; }
     public required string To { get; init; }
@@ -145,18 +157,18 @@ public class OneWayRelationAttribute : RelationAttribute
         Console.Out.Write("  ");
         
         using (new Help.Color(ConsoleColor.DarkCyan))
-            Console.Out.Write("One way");
-        
+            Console.Out.Write(Name);
+
         Console.Out.Write(" - (");
 
 
         using (new Help.Color(ConsoleColor.Blue))
-            Console.Out.Write(@interface.GetPrefixedNameForOption(From));
+            Console.Out.Write(@interface.GetPrefixedNameForOption(From) ?? From.SurroundWith("\"", "\""));
         
-        Console.Out.Write(" -> ");
+        Console.Out.Write(" > ");
         
         using (new Help.Color(ConsoleColor.Blue))
-            Console.Out.Write(@interface.GetPrefixedNameForOption(To));
+            Console.Out.Write(@interface.GetPrefixedNameForOption(To) ?? To.SurroundWith("\"", "\""));
 
         Console.Out.Write(")");
     }

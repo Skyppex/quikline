@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using Quikline.Attributes;
 using Quikline.Parser.Models;
 
@@ -102,133 +103,279 @@ public static class Quik
 
         foreach (var relation in relations)
         {
-            switch (relation)
-            {
-                case ExclusiveRelationAttribute exclusive:
-                    ValidateExclusiveRelation(exclusive, passedArgs);
-                    break;
+            var result = ValidateRelation(passedArgs, relation, relations, out _);
 
-                case InclusiveRelationAttribute inclusive:
-                    ValidateInclusiveRelation(inclusive, passedArgs);
-                    break;
+            if (result is null)
+                continue;
 
-                case OneOrMoreRelationAttribute oneOrMore:
-                    ValidateOneOrMoreRelation(oneOrMore, passedArgs);
-                    break;
-                
-                case OneWayRelationAttribute oneWay:
-                    ValidateOneWayRelation(oneWay, passedArgs);
-                    break;
-            }
+            Console.Error.WriteLine("Incorrect usage. ");
+            Console.Error.WriteLine(result);
+            Console.Error.Write("Use --help for more information.");
+            Environment.Exit(1);
         }
     }
 
-    private static void ValidateExclusiveRelation(
-        ExclusiveRelationAttribute exclusive,
-        Args passedArgs)
+    private static string? ValidateRelation(
+        Args passedArgs,
+        RelationAttribute relation,
+        List<RelationAttribute> relations,
+        out bool relationPassed)
     {
-        var relevant = passedArgs.Options
+        if (relation is ExclusiveRelationAttribute exclusive)
+            return ValidateExclusiveRelation(exclusive, passedArgs, relations, out relationPassed);
+        
+        if (relation is InclusiveRelationAttribute inclusive)
+            return ValidateInclusiveRelation(inclusive, passedArgs, relations, out relationPassed);
+        
+        if (relation is OneOrMoreRelationAttribute oneOrMore)
+            return ValidateOneOrMoreRelation(oneOrMore, passedArgs, relations, out relationPassed);
+        
+        if (relation is OneWayRelationAttribute oneWay)
+            return ValidateOneWayRelation(oneWay, passedArgs, relations, out relationPassed);
+
+        throw new UnreachableException("Unknown relation type.");
+    }
+
+    private static string? ValidateExclusiveRelation(
+        ExclusiveRelationAttribute exclusive,
+        Args passedArgs,
+        List<RelationAttribute> relations,
+        out bool relationPassed)
+    {
+        var relevantOptions = passedArgs.Options
             .Where(o => exclusive.Args.Contains(o.FieldName))
             .ToList();
 
-        var passed = relevant.Count(r => r.Passed);
-
-        if (exclusive.Required ? passed == 1 : passed <= 1)
-            return;
-
-        if (exclusive.Required && passed == 0)
-        {
-            Console.Error.WriteLine(
-                $"Incorrect usage. One of {string.Join(", ",
-                    relevant.Select(r => r.Long.ToString()))} must be present.");
-
-            Console.Error.Write("Use --help for more information.");
-
-            Environment.Exit(1);
-        }
-
-        Console.Error.WriteLine(
-            $"Incorrect usage. Args {string.Join(", ",
-                relevant.Select(r => r.Long.ToString()))} are mutually exclusive.");
-
-        Console.Error.Write("Use --help for more information.");
-
-        Environment.Exit(1);
-    }
-
-    private static void ValidateInclusiveRelation(
-        InclusiveRelationAttribute inclusive,
-        Args passedArgs)
-    {
-        var relevant = passedArgs.Options
-            .Where(o => inclusive.Args.Contains(o.FieldName))
+        var relevantRelations = relations
+            .Where(r => exclusive.Args.Contains(r.Name))
             .ToList();
 
-        var passed = relevant.Count(r => r.Passed);
+        var passedRelations = relevantRelations.Select(
+            r =>
+            {
+                var result = CheckRelation(
+                    passedArgs,
+                    relations,
+                    exclusive.Name,
+                    r.Name,
+                    false,
+                    out bool relationPassed);
+
+                var name = r.Name;
+                return (name, relationPassed, result);
+            })
+            .ToList();
+
+        var passed = relevantOptions.Count(r => r.Passed) +
+            passedRelations.Count(r => r.relationPassed);
+
+        if (exclusive.Required ? passed == 1 : passed <= 1)
+        {
+            relationPassed = passed == 1;
+            return null;
+        }
+
+        relationPassed = false;
+
+        var names = relevantOptions.Select(r => r.Long.ToString())
+            .Concat(passedRelations.Select(r => $"\"{r.name}\""));
+
+        if (exclusive.Required && passed == 0)
+            return $"One of {string.Join(", ", names)} must be present.";
+
+        var errors = passedRelations
+            .Where(r => r.result is not null)
+            .Select(r => r.result)
+            .ToList();
+        
+        return $"{string.Join(", ", names)} are mutually exclusive." +
+               (errors.Count != 0 ? "\n" + string.Join("\n", errors) : "");
+    }
+
+    private static string? ValidateInclusiveRelation(
+        InclusiveRelationAttribute inclusive,
+        Args passedArgs,
+        List<RelationAttribute> relations,
+        out bool relationPassed)
+    {
+        var relevantOptions = passedArgs.Options
+            .Where(o => inclusive.Args.Contains(o.FieldName))
+            .ToList();
+        
+        var relevantRelations = relations
+            .Where(r => inclusive.Args.Contains(r.Name))
+            .ToList();
+
+        var passedRelations = relevantRelations.Select(
+                r =>
+                {
+                    var result = CheckRelation(
+                        passedArgs,
+                        relations,
+                        inclusive.Name,
+                        r.Name,
+                        false,
+                        out bool relationPassed);
+
+                    var name = r.Name;
+                    return (name, relationPassed, result);
+                })
+            .ToList();
+        
+        var passed = relevantOptions.Count(r => r.Passed) +
+            passedRelations.Count(r => r.relationPassed);
 
         if (inclusive.Required
             ? passed == inclusive.Args.Length
             : passed == 0 || passed == inclusive.Args.Length)
-            return;
+        {
+            relationPassed = passed == inclusive.Args.Length;
+            return null;
+        }
+        
+        relationPassed = false;
+
+        var names = relevantOptions.Select(r => r.Long.ToString())
+            .Concat(passedRelations.Select(r => $"\"{r.name}\""));
 
         if (inclusive.Required && passed == 0)
-        {
-            Console.Error.WriteLine(
-                $"Incorrect usage. All of {string.Join(", ",
-                    relevant.Select(r => r.Long.ToString()))} must be present.");
+            return $"All of {string.Join(", ", names)} must be present.";
 
-            Console.Error.Write("Use --help for more information.");
-
-            Environment.Exit(1);
-        }
-
-        Console.Error.WriteLine(
-            $"Incorrect usage. Args: {string.Join(", ",
-                relevant.Select(r => r.Long.ToString()))} are mutually inclusive.");
-
-        Console.Error.Write("Use --help for more information.");
-
-        Environment.Exit(1);
+        var errors = passedRelations
+            .Where(r => r.result is not null)
+            .Select(r => r.result)
+            .ToList();
+        
+        return $"{string.Join(", ", names)} are mutually inclusive." +
+               (errors.Count != 0 ? "\n" + string.Join("\n", errors) : "");
     }
 
-    private static void ValidateOneOrMoreRelation(
+    private static string? ValidateOneOrMoreRelation(
         OneOrMoreRelationAttribute oneOrMore,
-        Args passedArgs)
+        Args passedArgs,
+        List<RelationAttribute> relations,
+        out bool relationPassed)
     {
-        var relevant = passedArgs.Options
+        var relevantOptions = passedArgs.Options
             .Where(o => oneOrMore.Args.Contains(o.FieldName))
             .ToList();
+        
+        var relevantRelations = relations
+            .Where(r => oneOrMore.Args.Contains(r.Name))
+            .ToList();
 
-        if (relevant.Count(r => r.Passed) >= 1)
-            return;
+        var passedRelations = relevantRelations.Select(
+                r =>
+                {
+                    var result = CheckRelation(
+                        passedArgs,
+                        relations,
+                        oneOrMore.Name,
+                        r.Name,
+                        false,
+                        out bool relationPassed);
 
-        Console.Error.WriteLine(
-            $"Incorrect usage. At least one of {string.Join(", ",
-                relevant.Select(r => "--" + r.FieldName.SplitPascalCase().ToKebabCase()))} must be present.");
+                    var name = r.Name;
+                    return (name, relationPassed, result);
+                })
+            .ToList();
+        
+        var passed = relevantOptions.Count(r => r.Passed) +
+            passedRelations.Count(r => r.relationPassed);
 
-        Console.Error.Write("Use --help for more information.");
+        if (!oneOrMore.Required || passed > 0)
+        {
+            relationPassed = passed > 0;
+            return null;
+        }
+        
+        relationPassed = false;
 
-        Environment.Exit(1);
+        var names = relevantOptions.Select(r => r.Long.ToString())
+            .Concat(passedRelations.Select(r => $"\"{r.name}\""));
+
+        var errors = passedRelations
+            .Where(r => r.result is not null)
+            .Select(r => r.result)
+            .ToList();
+
+        return $"At least one of {string.Join(", ", names)} must be present." +
+            (errors.Count != 0 ? "\n" + string.Join("\n", errors) : "");
     }
 
-    private static void ValidateOneWayRelation(
+    private static string? ValidateOneWayRelation(
         OneWayRelationAttribute oneWay,
-        Args passedArgs)
+        Args passedArgs,
+        List<RelationAttribute> relations,
+        out bool relationPassed)
     {
         var fromOption = passedArgs.Options
-            .First(o => o.FieldName == oneWay.From);
+            .FirstOrDefault(o => o.FieldName == oneWay.From);
         
+        var fromPassed = fromOption.Passed;
+        
+        if (fromOption == default)
+        {
+            var result = CheckRelation(passedArgs, relations, oneWay.Name, oneWay.From, false, out relationPassed);
+
+            if (result is not null || !relationPassed)
+                return result;
+
+            fromPassed = true;
+        }
+
+        if (!fromPassed)
+        {
+            relationPassed = false;
+            return null;
+        }
+
         var toOption = passedArgs.Options
-            .First(o => o.FieldName == oneWay.To);
+            .FirstOrDefault(o => o.FieldName == oneWay.To);
 
-        if (toOption.Passed || !fromOption.Passed)
-            return;
+        var toPassed = toOption.Passed;
+        
+        if (toOption == default)
+        {
+            var result = CheckRelation(passedArgs, relations, oneWay.Name, oneWay.To, true, out relationPassed);
 
-        Console.Error.WriteLine(
-            $"Incorrect usage. {fromOption.Long} must be passed with {toOption.Long}.");
-        Console.Error.Write("Use --help for more information.");
-            
-        Environment.Exit(1);
+            if (result is not null || !relationPassed)
+                return result;
+
+            toPassed = true;
+        }
+
+        if (toPassed)
+        {
+            relationPassed = true;
+            return null;
+        }
+
+        relationPassed = false;
+        return $"{fromOption.Long} must be passed with {toOption.Long}.";
+    }
+
+    private static string? CheckRelation(
+        Args passedArgs,
+        List<RelationAttribute> relations,
+        string relationName,
+        string relatedRelationName,
+        bool required,
+        out bool relationPassed)
+    {
+        var relation = relations.FirstOrDefault(r => r.Name == relatedRelationName);
+
+        if (relation is null)
+            throw new InvalidOperationException(
+                $"Incorrect setup. No option or relation with name: {relatedRelationName}");
+
+        if (required)
+            relation._required = true;
+        
+        var result = ValidateRelation(passedArgs, relation, relations, out relationPassed);
+
+        return result is null ? null
+            : $"Relation \"{relationName}\" requires \"{relatedRelationName}\":\n{result}";
     }
 
     private static bool SetValueOnInstance(
