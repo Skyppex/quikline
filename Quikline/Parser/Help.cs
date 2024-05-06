@@ -67,7 +67,7 @@ internal static class Help
                     
                     if (argument is { IsRest: true, RestSeparator: not null })
                         using (new Color(ConsoleColor.DarkYellow))
-                            Console.Out.Write("-- ");
+                            Console.Out.Write($"{argument.RestSeparator} ");
 
                     using (new Color(ConsoleColor.Gray))
                     {

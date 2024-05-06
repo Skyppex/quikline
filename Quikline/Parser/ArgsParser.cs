@@ -98,39 +98,7 @@ internal static class ArgsParser
 
         if (argument.IsRest)
         {
-            Argument? separatedArgument = null;
-
-            if (interfaceArgumentIterator.MoveNext())
-                separatedArgument = interfaceArgumentIterator.Current;
-
-            List<string> restList = [value];
-
-            while (argIterator.MoveNext())
-            {
-                var current = argIterator.Current;
-
-                if (separatedArgument is not null &&
-                    separatedArgument.Value.RestSeparator == current)
-                {
-                    List<string> separatedRestList = [];
-
-                    while (argIterator.MoveNext())
-                        separatedRestList.Add(argIterator.Current);
-
-                    separatedArgument =
-                        separatedArgument.Value.Passed(string.Join(" ", separatedRestList));
-
-                    parsed.AddArgument(separatedArgument.Value);
-
-                    break;
-                }
-
-                restList.Add(current);
-            }
-
-            argument = argument.Passed(string.Join(" ", restList));
-            parsed.AddArgument(argument);
-
+            ParseRestArguments(parsed, argIterator, interfaceArgumentIterator, value, argument);
             return;
         }
 
@@ -205,6 +173,63 @@ internal static class ArgsParser
         }
 
         parsed.AddArgument(argument);
+    }
+
+    private static void ParseRestArguments(
+        Args parsed,
+        IEnumerator<string> argIterator,
+        IEnumerator<Argument> interfaceArgumentIterator,
+        string value,
+        Argument argument)
+    {
+        Argument? separatedArgument = null;
+
+        if (interfaceArgumentIterator.MoveNext())
+            separatedArgument = interfaceArgumentIterator.Current;
+
+        List<string> restList = [value];
+
+        while (argIterator.MoveNext())
+            if (ParseSingleRestArgument(parsed, argIterator, interfaceArgumentIterator, separatedArgument, restList))
+                break;
+
+        argument = argument.Passed(string.Join(" ", restList));
+        parsed.AddArgument(argument);
+    }
+
+    private static bool ParseSingleRestArgument(
+        Args parsed,
+        IEnumerator<string> argIterator,
+        IEnumerator<Argument> interfaceArgumentIterator,
+        Argument? separatedArgument,
+        List<string> restList)
+    {
+        var current = argIterator.Current;
+
+        if (separatedArgument is not null &&
+            separatedArgument.Value.RestSeparator == current)
+        {
+            var currentArgument = separatedArgument;
+            
+            if (interfaceArgumentIterator.MoveNext())
+                separatedArgument = interfaceArgumentIterator.Current;
+
+            List<string> separatedRestList = [];
+
+            while (argIterator.MoveNext())
+                if (ParseSingleRestArgument(parsed, argIterator, interfaceArgumentIterator, separatedArgument, separatedRestList))
+                    break;
+
+            currentArgument =
+                currentArgument.Value.Passed(string.Join(" ", separatedRestList));
+
+            parsed.AddArgument(currentArgument.Value);
+
+            return true;
+        }
+
+        restList.Add(current);
+        return false;
     }
 
     private static void ParseOption(

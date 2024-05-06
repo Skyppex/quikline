@@ -49,6 +49,15 @@ public readonly struct TestArgs
     [Rest(Description = "The rest of the rest of the arguments.", Separator = "--")]
     public readonly string Rest2;
 
+    [Rest(Description = "The rest of the rest of the arguments 2: electric boogaloo.", Separator = "--")]
+    public readonly string Rest3;
+
+    [Rest(Description = "The rest of the rest of the arguments 2: electric boogaloo.", Separator = "++")]
+    public readonly string Rest4;
+
+    [Rest(Description = "The rest of the rest of the arguments 2: electric boogaloo.", Separator = "minusminus")]
+    public readonly string Rest5;
+
     public readonly LoggingArgs LoggingArgs;
     public readonly Commands Commands;
 

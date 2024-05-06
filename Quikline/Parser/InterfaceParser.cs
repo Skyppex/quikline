@@ -179,17 +179,10 @@ internal static class InterfaceParser
                     "Print this help message"));
         }
 
-        if (@interface.Arguments.Count(a => a.IsRest) > 2)
+        if (@interface.Arguments.Count(a => a is { IsRest: true, RestSeparator: null}) > 1)
             throw new InvalidProgramException(
-                "Incorrect setup. At most two fields can have the Rest attribute. One with a separator and one without.");
-
-        if (@interface.Arguments.Count(a => a is { IsRest: true, RestSeparator: null }) > 1)
-            throw new InvalidProgramException(
-                "Incorrect setup. At most two fields can have the Rest attribute. One with a separator and one without.");
-        
-        if (@interface.Arguments.Count(a => a is { IsRest: true, RestSeparator: not null }) > 1)
-            throw new InvalidProgramException(
-                "Incorrect setup. At most two fields can have the Rest attribute. One with a separator and one without.");
+                "Incorrect setup. Only one field can be a Rest field without a separator.\n" +
+                "The other Rest fields must have a separator defined.");
         
         @interface.Arguments.Sort(new ArgumentComparer());
 

@@ -3,9 +3,10 @@ using Quikline.Parser.Models;
 
 namespace Quikline.Attributes;
 
-[AttributeUsage(validOn: AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
+[AttributeUsage(validOn: AttributeTargets.Struct, AllowMultiple = true)]
 public abstract class RelationAttribute(string name) : Attribute
 {
+    // ReSharper disable once InconsistentNaming
     internal bool _required;
     
     /// <summary>
