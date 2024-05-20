@@ -1,4 +1,5 @@
-﻿using Quikline.Parser.Models;
+﻿using System.Reflection;
+using Quikline.Parser.Models;
 
 namespace Quikline.Parser;
 
@@ -102,7 +103,9 @@ internal static class ArgsParser
             return;
         }
 
-        if (argument.Type == typeof(int))
+        var argumentType = argument.Type;
+
+        if (argumentType == typeof(int))
         {
             if (!int.TryParse(value, out var intValue))
             {
@@ -115,7 +118,7 @@ internal static class ArgsParser
 
             argument = argument.Passed(intValue);
         }
-        else if (argument.Type == typeof(float))
+        else if (argumentType == typeof(float))
         {
             if (!float.TryParse(value, out var floatValue))
             {
@@ -128,7 +131,7 @@ internal static class ArgsParser
 
             argument = argument.Passed(floatValue);
         }
-        else if (argument.Type == typeof(double))
+        else if (argumentType == typeof(double))
         {
             if (!double.TryParse(value, out var doubleValue))
             {
@@ -141,7 +144,7 @@ internal static class ArgsParser
 
             argument = argument.Passed(doubleValue);
         }
-        else if (argument.Type == typeof(char))
+        else if (argumentType == typeof(char))
         {
             if (!char.TryParse(value, out var charValue))
             {
@@ -154,13 +157,13 @@ internal static class ArgsParser
 
             argument = argument.Passed(charValue);
         }
-        else if (argument.Type == typeof(string))
+        else if (argumentType == typeof(string))
         {
             argument = argument.Passed(value);
         }
-        else if (argument.Type.IsEnum)
+        else if (argumentType.IsEnum)
         {
-            if (!Enum.TryParse(argument.Type, value, ignoreCase: true, out var enumValue))
+            if (!Enum.TryParse(argumentType, value, ignoreCase: true, out var enumValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected an enum value for argument {arg}.");
@@ -170,6 +173,31 @@ internal static class ArgsParser
             }
 
             argument = argument.Passed(enumValue);
+        }
+        else if (argumentType.IsValueType &&
+                 argumentType.IsAssignableTo(typeof(IFromString<>)
+                     .MakeGenericType(argumentType)))
+        {
+            var valueFromString = argumentType.GetMethod(
+                    "FromString",
+                    BindingFlags.Public | BindingFlags.Static)!
+                .Invoke(null, [value]);
+            
+            if (valueFromString!.GetType()
+                    .GetField("Item2")!
+                    .GetValue(valueFromString) is string error)
+            {
+                Console.Error.WriteLine(
+                    $"Incorrect usage. {error}");
+
+                Console.Error.Write("Use --help for more information.");
+                Environment.Exit(1);
+                return;
+            }
+            
+            argument = argument.Passed(valueFromString.GetType()
+                .GetField("Item1")!
+                .GetValue(valueFromString));
         }
 
         parsed.AddArgument(argument);
@@ -245,7 +273,9 @@ internal static class ArgsParser
             Environment.Exit(1);
         }
 
-        if (option.Type == typeof(bool))
+        var optionType = option.Type;
+
+        if (optionType == typeof(bool))
         {
             parsed.AddOption(option.Passed(true));
 
@@ -261,7 +291,7 @@ internal static class ArgsParser
 
         var value = argIterator.Current;
 
-        if (option.Type == typeof(int))
+        if (optionType == typeof(int))
         {
             if (!int.TryParse(value, out var intValue))
             {
@@ -274,7 +304,7 @@ internal static class ArgsParser
 
             option = option.Passed(intValue);
         }
-        else if (option.Type == typeof(float))
+        else if (optionType == typeof(float))
         {
             if (!float.TryParse(value, out var floatValue))
             {
@@ -287,7 +317,7 @@ internal static class ArgsParser
 
             option = option.Passed(floatValue);
         }
-        else if (option.Type == typeof(double))
+        else if (optionType == typeof(double))
         {
             if (!double.TryParse(value, out var doubleValue))
             {
@@ -300,7 +330,7 @@ internal static class ArgsParser
 
             option = option.Passed(doubleValue);
         }
-        else if (option.Type == typeof(char))
+        else if (optionType == typeof(char))
         {
             if (!char.TryParse(value, out var charValue))
             {
@@ -313,14 +343,14 @@ internal static class ArgsParser
 
             option = option.Passed(charValue);
         }
-        else if (option.Type == typeof(string))
+        else if (optionType == typeof(string))
         {
             option = option.Passed(value);
         }
-        else if (option.Type.IsEnum)
+        else if (optionType.IsEnum)
         {
             if (!Enum.TryParse(
-                    option.Type,
+                    optionType,
                     value.SplitKebabCase().ToPascalCase(),
                     ignoreCase: true,
                     out var enumValue))
@@ -333,6 +363,30 @@ internal static class ArgsParser
             }
 
             option = option.Passed(enumValue);
+        }
+        else if (optionType.IsValueType &&
+                 optionType.IsAssignableTo(typeof(IFromString<>)
+                     .MakeGenericType(optionType)))
+        {
+            var valueFromString = optionType.GetMethod("FromString",
+                BindingFlags.Public | BindingFlags.Static)!
+                .Invoke(null, [value]);
+            
+            if (valueFromString!.GetType()
+                    .GetField("Item2")!
+                    .GetValue(valueFromString) is string error)
+            {
+                Console.Error.WriteLine(
+                    $"Incorrect usage. {error}");
+
+                Console.Error.Write("Use --help for more information.");
+                Environment.Exit(1);
+                return;
+            }
+            
+            option = option.Passed(valueFromString.GetType()
+                .GetField("Item1")!
+                .GetValue(valueFromString));
         }
 
         parsed.AddOption(option);

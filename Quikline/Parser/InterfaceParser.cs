@@ -332,6 +332,23 @@ internal static class InterfaceParser
         if (fieldAttributes.SingleOrDefault(a => a is SubcommandAttribute) is not null)
             return;
 
+        // Do this last to avoid unnecessary throws due to
+        // structs which use above attributes.
+        try
+        {
+            var concretizedFromString = typeof(IFromString<>).MakeGenericType(fieldType);
+            
+            if (fieldType.IsValueType && fieldType.IsAssignableTo(concretizedFromString))
+                return;
+        }
+        catch
+        {
+            // Ignored.
+            // MakeGenericType will throw an exception if
+            // the fieldType is and invalid generic type for IFromString.
+            // We don't care about the exception, just that it's not a valid type.
+        }
+
         throw new InvalidProgramException(
             "Incorrect setup. Unsupported type found: " +
             $"{fieldType.Name} for field {(fieldDeclaringType is null ? "" : fieldDeclaringType + ".")}{fieldName}.");
