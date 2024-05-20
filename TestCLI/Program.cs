@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Text;
+using Quikline;
 using Quikline.Attributes;
 using Quikline.Parser;
 
@@ -16,6 +17,12 @@ Console.WriteLine(a);
 [OneWayRelation("naming", From = "casing", To = "logging")]
 public readonly struct TestArgs
 {
+    [Option(Short = 'r', Description = "Range (format: min..max).")]
+    public readonly IntRange range;
+    
+    [Argument(Description = "Range (format: min..max).")]
+    public readonly IntRange rangeArg;
+
     [Option(Short = '0', Description = "No elements.")]
     public readonly bool None;
 
@@ -243,4 +250,21 @@ public enum LogLevel
     Critical,
     Fatal,
     ReallyBad,
+}
+
+public readonly record struct IntRange(int Min, int Max) : IFromString<IntRange>
+{
+    public override string ToString() => $"IntRange {{ Min: {Min}, Max: {Max} }}";
+    public static (IntRange?, string?) FromString(string value)
+    {
+        var parts = value.Split("..");
+        
+        if (parts.Length != 2)
+            return (default, "Invalid range format. Expected 'min..max'.");
+
+        if (int.TryParse(parts[0], out var min) && int.TryParse(parts[1], out var max))
+            return (new IntRange(min, max), null);
+
+        return (default, "Invalid range format. Expected 'min..max'.");
+    }
 }
