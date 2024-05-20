@@ -1,4 +1,5 @@
-﻿using Quikline.Attributes;
+﻿using System.Reflection;
+using Quikline.Attributes;
 
 namespace Quikline.Parser.Models;
 
@@ -62,16 +63,18 @@ internal readonly record struct Option(
     Short? Short,
     Long Long,
     Type Type,
+    FieldInfo? FieldInfo,
     object? Value,
     string? Description)
 {
-    public static Option ShortOnly(Short @short) => new Option(
+    public static Option ShortOnly(Short @short) => new(
         false,
         "",
         false,
         @short,
         Long.Empty,
         typeof(bool),
+        null!,
         false,
         null);
 
@@ -87,13 +90,16 @@ internal readonly record struct Option(
     public void PrintUsage()
     {
         Console.Out.Write("  ");
+        
         using (new Help.Color(ConsoleColor.DarkCyan))
         {
             if (Short != null)
             {
                 Console.Out.Write(Short);
+                
                 using (new Help.Color(ConsoleColor.Gray))
                     Console.Out.Write(", ");
+                
                 Console.Out.Write(Long);
             }
             else
@@ -104,19 +110,21 @@ internal readonly record struct Option(
                 using (new Help.Color(ConsoleColor.Gray))
                 {
                     Console.Out.Write(" <");
+                    
                     using (new Help.Color(ConsoleColor.Blue))
-                        Type.PrintUsageName();
+                        Type.PrintUsageName(FieldInfo);
+                    
                     Console.Out.Write(">");
                 }
             }
 
-            if (Description != null)
+            if (Description == null)
+                return;
+
+            using (new Help.Color(ConsoleColor.Gray))
             {
-                using (new Help.Color(ConsoleColor.Gray))
-                {
-                    Console.Out.Write(" - ");
-                    Console.Out.Write(Description);
-                }
+                Console.Out.Write(" - ");
+                Console.Out.Write(Description);
             }
         }
     }
@@ -128,6 +136,7 @@ internal readonly record struct Argument(
     bool Optional,
     string Name,
     Type Type,
+    FieldInfo? FieldInfo,
     object? Value,
     string? Description,
     bool IsRest = false,
@@ -143,7 +152,7 @@ internal readonly record struct Argument(
                 using (new Help.Color(ConsoleColor.DarkYellow))
                     Console.Out.Write($"{RestSeparator} ");
             else
-                Console.Out.Write("..");
+                Console.Out.Write("...");
         }
         
         using (new Help.Color(ConsoleColor.DarkCyan))
@@ -152,37 +161,39 @@ internal readonly record struct Argument(
         using (new Help.Color(ConsoleColor.Gray))
         {
             Console.Out.Write(" <");
+            
             using (new Help.Color(ConsoleColor.Blue))
-                Type.PrintUsageName();
+                Type.PrintUsageName(FieldInfo);
+            
             Console.Out.Write(">");
 
-            if (Description != null || Optional)
+            if (Description == null && !Optional)
+                return;
+
+            Console.Out.Write(" -");
+
+            if (Description != null)
+                Console.Out.Write($" {Description}");
+
+            if (!Optional)
+                return;
+
+            Console.Out.Write(" (");
+
+            using (new Help.Color(ConsoleColor.DarkYellow))
             {
-                Console.Out.Write(" -");
-
-                if (Description != null)
-                    Console.Out.Write($" {Description}");
-
-                if (Optional)
+                if (Value is null)
+                    Console.Out.Write("optional");
+                else
                 {
-                    Console.Out.Write(" (");
-
-                    using (new Help.Color(ConsoleColor.DarkYellow))
-                    {
-                        if (Value is null)
-                            Console.Out.Write("optional");
-                        else
-                        {
-                            Console.Out.Write("default: ");
+                    Console.Out.Write("default: ");
                             
-                            using (new Help.Color(ConsoleColor.DarkBlue))
-                                Console.Out.Write(Value);
-                        }
-                    }
-                    
-                    Console.Out.Write(")");
+                    using (new Help.Color(ConsoleColor.DarkBlue))
+                        Console.Out.Write(Value);
                 }
             }
+                    
+            Console.Out.Write(")");
         }
     }
 }
