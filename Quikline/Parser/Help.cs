@@ -74,7 +74,7 @@ internal static class Help
                         Console.Out.Write("<");
 
                         if (argument is { IsRest: true, RestSeparator: null })
-                            Console.Out.Write("..");
+                            Console.Out.Write("...");
 
                         using (new Color(ConsoleColor.DarkCyan))
                             Console.Out.Write(argument.Name);

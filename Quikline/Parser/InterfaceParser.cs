@@ -146,6 +146,7 @@ internal static class InterfaceParser
                     new Long(@interface.LongPrefix, new Name("version")),
                     typeof(bool),
                     null,
+                    null,
                     "Print the version"));
         }
 
@@ -175,6 +176,7 @@ internal static class InterfaceParser
                     shortHelp,
                     new Long(@interface.LongPrefix, new Name("help")),
                     typeof(bool),
+                    null,
                     null,
                     "Print this help message"));
         }
@@ -223,6 +225,7 @@ internal static class InterfaceParser
             @short,
             @long,
             field.FieldType,
+            field,
             optionAttr.Default,
             optionAttr.Description);
 
@@ -259,6 +262,7 @@ internal static class InterfaceParser
             field.IsNullable() || argumentAttr.Default is not null,
             name,
             field.FieldType,
+            field,
             argumentAttr.Default,
             argumentAttr.Description);
 
@@ -297,6 +301,7 @@ internal static class InterfaceParser
             true,
             restAttr.Name ?? field.Name.SplitPascalCase().ToKebabCase(),
             field.FieldType,
+            field,
             null,
             restAttr.Description,
             IsRest: true,
@@ -325,6 +330,13 @@ internal static class InterfaceParser
         
         if (fieldType.IsEnum)
             return;
+        
+        if (fieldType.IsArray)
+        {
+            var elementType = fieldType.GetElementType();
+            ValidateSupportedType(elementType!, fieldAttributes, fieldDeclaringType, fieldName);
+            return;
+        }
 
         if (fieldAttributes.SingleOrDefault(a => a is ArgsAttribute) is not null)
             return;
