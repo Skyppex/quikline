@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-using Quikline.Attributes;
+﻿using Quikline.Attributes;
 using Quikline.Parser.Models;
 
 namespace Quikline.Parser;
@@ -64,7 +62,7 @@ internal static class Help
                 foreach (var argument in arguments)
                 {
                     Console.Out.Write(" ");
-                    
+
                     if (argument is { IsRest: true, RestSeparator: not null })
                         using (new Color(ConsoleColor.DarkYellow))
                             Console.Out.Write($"{argument.RestSeparator} ");
@@ -74,7 +72,7 @@ internal static class Help
                         Console.Out.Write("<");
 
                         if (argument is { IsRest: true, RestSeparator: null })
-                            Console.Out.Write("..");
+                            Console.Out.Write("...");
 
                         using (new Color(ConsoleColor.DarkCyan))
                             Console.Out.Write(argument.Name);
@@ -95,10 +93,10 @@ internal static class Help
     private static string GetCommandName(Interface @interface)
     {
         var name = "";
-        
+
         if (@interface.Parent is not null)
             name = GetCommandName(@interface.Parent) + " ";
-        
+
         return name + @interface.CommandName.SplitPascalCase().ToKebabCase();
     }
 
@@ -170,7 +168,7 @@ internal static class Help
     {
         Console.Out.WriteLine("");
         Console.Out.WriteLine("");
-        
+
         using (new Color(ConsoleColor.DarkGreen))
             Console.Out.Write("Options");
 
@@ -194,19 +192,19 @@ internal static class Help
         relations.Sort(new RelationComparer());
         Console.Out.WriteLine("");
         Console.Out.WriteLine("");
-        
+
         using (new Color(ConsoleColor.DarkGreen))
             Console.Out.Write("Relations");
 
         using (new Color(ConsoleColor.Gray))
         {
             Console.Out.WriteLine(":");
-            
+
             for (int i = 0; i < relations.Count; i++)
             {
                 var relation = relations[i];
                 relation.PrintUsage(@interface);
-                
+
                 if (i < relations.Count - 1)
                     Console.Out.WriteLine();
             }

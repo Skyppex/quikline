@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using System.Text.RegularExpressions;
+using Quikline.Attributes;
 using Quikline.Parser.Models;
 
 namespace Quikline.Parser;
@@ -7,7 +9,7 @@ internal static class ArgsParser
 {
     public static Args Parse(IEnumerator<string> argIterator, Interface @interface)
     {
-        var parsed = new Args(@interface.CommandType);
+        var parsed = new Args(@interface.CommandType, @interface.CommandName);
         IEnumerator<Argument> interfaceArgumentIterator = @interface.Arguments.GetEnumerator();
 
         while (true)
@@ -104,102 +106,7 @@ internal static class ArgsParser
         }
 
         var argumentType = argument.Type;
-
-        if (argumentType == typeof(int))
-        {
-            if (!int.TryParse(value, out var intValue))
-            {
-                Console.Error.WriteLine(
-                    $"Incorrect usage. Expected an integer value for argument {arg}.");
-
-                Console.Error.Write("Use --help for more information.");
-                Environment.Exit(1);
-            }
-
-            argument = argument.Passed(intValue);
-        }
-        else if (argumentType == typeof(float))
-        {
-            if (!float.TryParse(value, out var floatValue))
-            {
-                Console.Error.WriteLine(
-                    $"Incorrect usage. Expected a float value for argument {arg}.");
-
-                Console.Error.Write("Use --help for more information.");
-                Environment.Exit(1);
-            }
-
-            argument = argument.Passed(floatValue);
-        }
-        else if (argumentType == typeof(double))
-        {
-            if (!double.TryParse(value, out var doubleValue))
-            {
-                Console.Error.WriteLine(
-                    $"Incorrect usage. Expected a double value for argument {arg}.");
-
-                Console.Error.Write("Use --help for more information.");
-                Environment.Exit(1);
-            }
-
-            argument = argument.Passed(doubleValue);
-        }
-        else if (argumentType == typeof(char))
-        {
-            if (!char.TryParse(value, out var charValue))
-            {
-                Console.Error.WriteLine(
-                    $"Incorrect usage. Expected a char value for argument {arg}.");
-
-                Console.Error.Write("Use --help for more information.");
-                Environment.Exit(1);
-            }
-
-            argument = argument.Passed(charValue);
-        }
-        else if (argumentType == typeof(string))
-        {
-            argument = argument.Passed(value);
-        }
-        else if (argumentType.IsEnum)
-        {
-            if (!Enum.TryParse(argumentType, value, ignoreCase: true, out var enumValue))
-            {
-                Console.Error.WriteLine(
-                    $"Incorrect usage. Expected an enum value for argument {arg}.");
-
-                Console.Error.Write("Use --help for more information.");
-                Environment.Exit(1);
-            }
-
-            argument = argument.Passed(enumValue);
-        }
-        else if (argumentType.IsValueType &&
-                 argumentType.IsAssignableTo(typeof(IFromString<>)
-                     .MakeGenericType(argumentType)))
-        {
-            var valueFromString = argumentType.GetMethod(
-                    "FromString",
-                    BindingFlags.Public | BindingFlags.Static)!
-                .Invoke(null, [value]);
-            
-            if (valueFromString!.GetType()
-                    .GetField("Item2")!
-                    .GetValue(valueFromString) is string error)
-            {
-                Console.Error.WriteLine(
-                    $"Incorrect usage. {error}");
-
-                Console.Error.Write("Use --help for more information.");
-                Environment.Exit(1);
-                return;
-            }
-            
-            argument = argument.Passed(valueFromString.GetType()
-                .GetField("Item1")!
-                .GetValue(valueFromString));
-        }
-
+        argument = argument.Passed(GetValue(argumentType, value, argument.FieldInfo, arg, "argument"));
         parsed.AddArgument(argument);
     }
 
@@ -290,105 +197,192 @@ internal static class ArgsParser
         }
 
         var value = argIterator.Current;
-
-        if (optionType == typeof(int))
+        option = option.Passed(GetValue(optionType, value, option.FieldInfo, arg, "argument"));
+        parsed.AddOption(option);
+    }
+    
+    private static object GetValue(Type type, string valueArg, FieldInfo? fieldInfo, string arg, string text)
+    {
+        var underlyingType = type.GetUnderlyingType();
+        
+        if (underlyingType == typeof(int))
         {
-            if (!int.TryParse(value, out var intValue))
+            if (!int.TryParse(valueArg, out var intValue))
             {
                 Console.Error.WriteLine(
-                    $"Incorrect usage. Expected an integer value for option {arg}.");
+                    $"Incorrect usage. Expected an integer value for {text} {arg}.");
 
                 Console.Error.Write("Use --help for more information.");
                 Environment.Exit(1);
             }
 
-            option = option.Passed(intValue);
+            return intValue;
         }
-        else if (optionType == typeof(float))
+        
+        if (underlyingType == typeof(float))
         {
-            if (!float.TryParse(value, out var floatValue))
+            if (!float.TryParse(valueArg, out var floatValue))
             {
                 Console.Error.WriteLine(
-                    $"Incorrect usage. Expected a float value for option {arg}.");
+                    $"Incorrect usage. Expected a float value for {text} {arg}.");
 
                 Console.Error.Write("Use --help for more information.");
                 Environment.Exit(1);
             }
 
-            option = option.Passed(floatValue);
+            return floatValue;
         }
-        else if (optionType == typeof(double))
+        
+        if (underlyingType == typeof(double))
         {
-            if (!double.TryParse(value, out var doubleValue))
+            if (!double.TryParse(valueArg, out var doubleValue))
             {
                 Console.Error.WriteLine(
-                    $"Incorrect usage. Expected a double value for option {arg}.");
+                    $"Incorrect usage. Expected a double value for {text} {arg}.");
 
                 Console.Error.Write("Use --help for more information.");
                 Environment.Exit(1);
             }
 
-            option = option.Passed(doubleValue);
+            return doubleValue;
         }
-        else if (optionType == typeof(char))
+        
+        if (underlyingType == typeof(char))
         {
-            if (!char.TryParse(value, out var charValue))
+            if (!char.TryParse(valueArg, out var charValue))
             {
                 Console.Error.WriteLine(
-                    $"Incorrect usage. Expected a char value for option {arg}.");
+                    $"Incorrect usage. Expected a char value for {text} {arg}.");
 
                 Console.Error.Write("Use --help for more information.");
                 Environment.Exit(1);
             }
 
-            option = option.Passed(charValue);
+            return charValue;
         }
-        else if (optionType == typeof(string))
+        
+        if (underlyingType == typeof(string))
+            return valueArg;
+        
+        if (underlyingType.IsEnum)
         {
-            option = option.Passed(value);
-        }
-        else if (optionType.IsEnum)
-        {
-            if (!Enum.TryParse(
-                    optionType,
-                    value.SplitKebabCase().ToPascalCase(),
-                    ignoreCase: true,
-                    out var enumValue))
+            var enumFields = underlyingType.GetFields();
+            var names = new Dictionary<string, string>();
+
+            foreach (var enumField in enumFields)
+            {
+                var nameAttr = enumField.GetCustomAttribute<NameAttribute>();
+                names.Add(nameAttr is null ? enumField.Name : nameAttr.Name, enumField.Name);
+            }
+
+            if (!names.TryGetValue(valueArg, out var enumVariantName))
             {
                 Console.Error.WriteLine(
-                    $"Incorrect usage. Expected an enum value for option {arg}.");
+                    $"Incorrect usage. Expected an enum value for {text} {arg}.");
+
+                Console.Error.Write("Use --help for more information.");
+                Environment.Exit(1);
+            }
+            
+            if (!Enum.TryParse(underlyingType, enumVariantName, ignoreCase: true, out var enumValue))
+            {
+                Console.Error.WriteLine(
+                    $"Incorrect usage. Expected an enum value for {text} {arg}.");
 
                 Console.Error.Write("Use --help for more information.");
                 Environment.Exit(1);
             }
 
-            option = option.Passed(enumValue);
+            return enumValue;
         }
-        else if (optionType.IsValueType &&
-                 optionType.IsAssignableTo(typeof(IFromString<>)
-                     .MakeGenericType(optionType)))
+        
+        if (underlyingType.IsValueType &&
+                 underlyingType.IsAssignableTo(typeof(IFromString<>)
+                     .MakeGenericType(underlyingType)))
         {
-            var valueFromString = optionType.GetMethod("FromString",
-                BindingFlags.Public | BindingFlags.Static)!
-                .Invoke(null, [value]);
+            var valueFromString = underlyingType.GetMethod(
+                    "FromString",
+                    BindingFlags.Public | BindingFlags.Static)!
+                .Invoke(null, [valueArg]);
             
             if (valueFromString!.GetType()
                     .GetField("Item2")!
                     .GetValue(valueFromString) is string error)
             {
                 Console.Error.WriteLine(
-                    $"Incorrect usage. {error}");
+                    $"Incorrect usage. {error} | {text} {arg}.");
 
                 Console.Error.Write("Use --help for more information.");
                 Environment.Exit(1);
-                return;
             }
-            
-            option = option.Passed(valueFromString.GetType()
+
+            return valueFromString.GetType()
                 .GetField("Item1")!
-                .GetValue(valueFromString));
+                .GetValue(valueFromString)!;
         }
 
-        parsed.AddOption(option);
+        if (underlyingType.IsArray)
+        {
+            var genericType = underlyingType.GetElementType();
+            
+            var delimiterAttribute = fieldInfo?
+                .GetCustomAttribute<DelimiterAttribute>();
+
+            var delimiter = delimiterAttribute?.Delimiter 
+                            ?? ","; // Default delimiter
+
+            var useRegex = delimiterAttribute?.Regex ?? false;
+
+            var values = useRegex ? SplitRegex(valueArg, delimiter).ToList()
+                : valueArg.Split(delimiter).ToList();
+
+            var fixedSizeAttribute = fieldInfo?.GetCustomAttribute<FixedSizeAttribute>();
+
+            if (fixedSizeAttribute != null)
+            {
+                if (values.Count != fixedSizeAttribute.Size)
+                {
+                    Console.Error.WriteLine(
+                        $"Incorrect usage. Expected {fixedSizeAttribute.Size} values for {text} {arg}.");
+
+                    Console.Error.Write("Use --help for more information.");
+                    Environment.Exit(1);
+                }
+            }
+            
+            var enumerable = values.Select(val => GetValue(genericType!, val, fieldInfo, arg, text)).ToArray();
+
+            if (underlyingType.IsArray)
+            {
+                var array = Array.CreateInstance(genericType!, values.Count);
+                
+                for (var i = 0; i < values.Count; i++)
+                    array.SetValue(enumerable[i], i);
+                
+                return array;
+            }
+        }
+        
+        Console.Error.WriteLine(
+            $"Incorrect setup. Unsupported type for {text} {arg}.");
+        
+        Console.Error.Write("Use --help for more information.");
+        Environment.Exit(1);
+        return null;
+    }
+    
+    private static IEnumerable<string> SplitRegex(string value, string delimiter)
+    {
+        var regex = new Regex(delimiter);
+        var matches = regex.Matches(value).ToList();
+
+        var prevIndex = 0;
+        foreach (var match in matches)
+        {
+            yield return value[prevIndex..match.Index];
+            prevIndex = match.Index + match.Length;
+        }
+        
+        yield return value[prevIndex..];
     }
 }

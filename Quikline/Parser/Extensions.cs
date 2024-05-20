@@ -9,28 +9,74 @@ internal static class TypeExtensions
 {
     public static Type GetUnderlyingType(this Type fieldType) => Nullable.GetUnderlyingType(fieldType)?.GetUnderlyingType() ?? fieldType;
     
-    public static void PrintUsageName(this Type type)
+    public static void PrintUsageName(this Type type, FieldInfo? fieldInfo)
     {
-        if (type.IsEnum)
-        {
-            var names = Enum.GetNames(type);
-            
-            for (var i = 0; i < names.Length; i++)
-            {
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Out.Write(names[i].SplitPascalCase().ToKebabCase());
+        var underlyingType = type.GetUnderlyingType();
 
-                if (i >= names.Length - 1)
+        using var _ = new Help.Color(ConsoleColor.Blue);
+        
+        if (underlyingType.IsEnum)
+        {
+            var variantNames = Enum.GetNames(underlyingType);
+            var enumFields = type.GetFields();
+            var names = new Dictionary<string, string>();
+
+            foreach (var variantName in variantNames)
+            {
+                var variantNameAttr = enumFields.Single(ef => ef.Name == variantName).GetCustomAttribute<NameAttribute>();
+                names.Add(variantName, variantNameAttr is null ? variantName : variantNameAttr.Name);
+            }
+
+            for (var i = 0; i < names.Count; i++)
+            {
+                Console.Out.Write(names.ElementAt(i).Value.SplitPascalCase().ToKebabCase());
+
+                if (i >= names.Count - 1)
                     continue;
 
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.Out.Write("|");
+                using (new Help.Color(ConsoleColor.Gray))
+                    Console.Out.Write("|");
             }
             
             return;
         }
+        
+        if (underlyingType.IsArray)
+        {
+            if (fieldInfo is null)
+                throw new ArgumentException("Missing field info for array or list type.");
+            
+            var genericType = underlyingType.GetElementType();
+            
+            using (new Help.Color(ConsoleColor.Gray))
+                Console.Out.Write("[");
 
-        Console.Out.Write(type.Name.SplitPascalCase().ToKebabCase());
+            genericType!.PrintUsageName(fieldInfo);
+
+            var fixedSizeAttribute = fieldInfo.GetCustomAttribute<FixedSizeAttribute>();
+
+            if (fixedSizeAttribute is not null)
+            {
+                using (new Help.Color(ConsoleColor.Gray))
+                    Console.Out.Write("; ");
+                
+                using (new Help.Color(ConsoleColor.DarkBlue))
+                    Console.Out.Write(fixedSizeAttribute.Size);
+            }
+
+            using (new Help.Color(ConsoleColor.Gray))
+                Console.Out.Write("]");
+
+            return;
+        }
+
+        var nameAttr = underlyingType.GetCustomAttribute<NameAttribute>();
+        var typeName = (nameAttr?.Name ?? underlyingType.Name)
+            .PrettifyTypeName()
+            .SplitPascalCase()
+            .ToKebabCase();
+        
+        Console.Out.Write(typeName);
     }
     
     public static bool IsNullable(this FieldInfo field)
@@ -126,4 +172,15 @@ internal static class StringExtensions
 
     public static string OrIfEmpty(this string value, string defaultValue) =>
         string.IsNullOrEmpty(value) ? defaultValue : value;
+
+    public static string PrettifyTypeName(this string typeName) => typeName switch
+    {
+        "Int16" => "short",
+        "Int32" => "int",
+        "Int64" => "long",
+        "Single" => "float",
+        "Boolean" => "bool",
+        "String" => "string",
+        _ => typeName
+    };
 }

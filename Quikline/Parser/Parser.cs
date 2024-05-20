@@ -52,10 +52,12 @@ public static class Quik
         if (passedArgs.Subcommand is not null)
         {
             var instance = Activator.CreateInstance(type)!;
-            var subcommandType = passedArgs.Subcommand.CommandType;
+            var subcommand = passedArgs.Subcommand;
+            var subcommandType = subcommand.CommandType;
+            var subcommandName = subcommand.CommandName;
 
             var subcommandInterface =
-                @interface.Subcommands.Single(s => s.CommandName == subcommandType.Name);
+                @interface.Subcommands.Single(s => s.CommandName == subcommandName);
 
             var subcommandUserArgs = CreateSubcommandUserArgs(
                 passedArgs.Subcommand,

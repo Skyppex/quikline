@@ -50,6 +50,23 @@ Each of these have several properties for you to fill in to customize your API, 
 - OneWay
   - If option 'a' is provided option 'b' must also be provided, but not the other way around
 
+## Supported Types
+
+- `bool`
+- `int`
+- `float`
+- `double`
+- `char`
+- `string`
+- `enums`
+- `arrays` (not lists though)
+  - Arrays can take advantage the `[FixedSize]` and `[Delimiter]` attributes
+  - The `[FixedSize]` attribute can be used to specify the size of the array
+  - The `[Delimiter]` attribute can be used to specify the delimiter used to split the string into an array
+  - Note that arrays must be passed as a single argument. i.e. `--array 1,2,3,4` or `--array "1 2 3 4"`
+- `custom data types` (as long as they implement `IFromString`)
+- `nullable types` (note: elements in arrays can be nullable, but it doesn't matter)
+
 ## Examples
 
 ### Simple command
@@ -85,8 +102,6 @@ public readonly struct Beverage {
     public readonly Tea Tea;
     public readonly Coffee Coffee;
 }
-
-[Arg
 
 [Subcommand(Description="Create some tea")]
 public readonly struct Tea {  

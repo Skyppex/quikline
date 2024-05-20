@@ -20,8 +20,16 @@ public readonly struct TestArgs
     [Option(Short = 'r', Description = "Range (format: min..max).")]
     public readonly IntRange range;
     
-    [Argument(Description = "Range (format: min..max).")]
-    public readonly IntRange rangeArg;
+    [Argument(Name = "range", Description = "Range (format: min..max).")]
+    public readonly IntRange? rangeArg;
+
+    [Argument(Description = "Array of numbers (format: x,y,z).")]
+    public readonly int[] numArray;
+
+    [FixedSize(3)]
+    [Delimiter(" +", Regex = true)]
+    [Argument(Description = "Array of ranges (format: x1..x2 y1..y2 z1..z2).")]
+    public readonly IntRange[] rangeArray;
 
     [Option(Short = '0', Description = "No elements.")]
     public readonly bool None;
@@ -46,7 +54,7 @@ public readonly struct TestArgs
 
     [Argument(Description = "The other file to process.")]
     public readonly string? OtherFile;
-    
+
     [Argument(Description = "The other file to process.", Default = 100)]
     public readonly int Temperature;
 
@@ -82,6 +90,22 @@ public readonly struct TestArgs
             {
                 var subThis = field.GetValue(this)!;
                 builder.Append(subThis);
+                continue;
+            }
+
+            if (field.FieldType.IsArray)
+            {
+                var array = (Array) field.GetValue(this)!;
+                builder.Append($"    {field.Name}: [");
+                
+                for (var i = 0; i < array.Length; i++)
+                {
+                    builder.Append(array.GetValue(i));
+                    if (i != array.Length - 1)
+                        builder.Append(", ");
+                }
+                
+                builder.Append("],\n");
                 continue;
             }
 
@@ -153,6 +177,7 @@ public readonly struct Commands
 }
 
 [Subcommand(Description = "A test subcommand.")]
+[Name("with")]
 [OneOrMoreRelation("oof", nameof(Woofer), nameof(Poofer))]
 [ExclusiveRelation("casing", nameof(CaseSensitive), nameof(CaseInsensitive))]
 [InclusiveRelation("rel", nameof(Force), "scripting")]
@@ -249,9 +274,11 @@ public enum LogLevel
     Error,
     Critical,
     Fatal,
+    [Name("horrendous-error")]
     ReallyBad,
 }
 
+[Name("range")]
 public readonly record struct IntRange(int Min, int Max) : IFromString<IntRange>
 {
     public override string ToString() => $"IntRange {{ Min: {Min}, Max: {Max} }}";

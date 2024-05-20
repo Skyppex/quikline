@@ -14,14 +14,15 @@ internal static class InterfaceParser
         var commandAttr = (CommandAttribute?)attributes.SingleOrDefault(a => a is CommandAttribute);
         var subcommandAttr = (SubcommandAttribute?)attributes.SingleOrDefault(a => a is SubcommandAttribute);
         var argsAttr = (ArgsAttribute?)attributes.SingleOrDefault(a => a is ArgsAttribute);
-        
+        var nameAttr = (NameAttribute?)attributes.SingleOrDefault(a => a is NameAttribute);
+
         if (commandAttr is not null && subcommandAttr is not null)
             throw new InvalidProgramException(
                 "Incorrect setup. Type cannot have both Command and Subcommand attributes.");
 
         if (subcommandAttr is not null)
             commandAttr = subcommandAttr.IntoCommand();
-        
+
         if (commandAttr is null && argsAttr is null)
             throw new InvalidProgramException(
                 "Incorrect setup. Type must have either Command or Args attribute.");
@@ -45,7 +46,13 @@ internal static class InterfaceParser
             };
         }
         
-        var @interface = new Interface(commandAttr!, underlyingType, subcommandAttr is null ? null : underlyingType.Name, parent);
+        var @interface = new Interface(
+            commandAttr!,
+            underlyingType,
+            subcommandAttr is null
+                ? null
+                : nameAttr?.Name ?? underlyingType.Name,
+            parent);
 
         // Add the options and arguments from the fields.
         var fields = underlyingType.GetFields();
@@ -146,6 +153,7 @@ internal static class InterfaceParser
                     new Long(@interface.LongPrefix, new Name("version")),
                     typeof(bool),
                     null,
+                    null,
                     "Print the version"));
         }
 
@@ -175,6 +183,7 @@ internal static class InterfaceParser
                     shortHelp,
                     new Long(@interface.LongPrefix, new Name("help")),
                     typeof(bool),
+                    null,
                     null,
                     "Print this help message"));
         }
@@ -223,6 +232,7 @@ internal static class InterfaceParser
             @short,
             @long,
             field.FieldType,
+            field,
             optionAttr.Default,
             optionAttr.Description);
 
@@ -259,6 +269,7 @@ internal static class InterfaceParser
             field.IsNullable() || argumentAttr.Default is not null,
             name,
             field.FieldType,
+            field,
             argumentAttr.Default,
             argumentAttr.Description);
 
@@ -297,6 +308,7 @@ internal static class InterfaceParser
             true,
             restAttr.Name ?? field.Name.SplitPascalCase().ToKebabCase(),
             field.FieldType,
+            field,
             null,
             restAttr.Description,
             IsRest: true,
@@ -325,6 +337,13 @@ internal static class InterfaceParser
         
         if (fieldType.IsEnum)
             return;
+        
+        if (fieldType.IsArray)
+        {
+            var elementType = fieldType.GetElementType();
+            ValidateSupportedType(elementType!, fieldAttributes, fieldDeclaringType, fieldName);
+            return;
+        }
 
         if (fieldAttributes.SingleOrDefault(a => a is ArgsAttribute) is not null)
             return;
