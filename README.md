@@ -103,8 +103,6 @@ public readonly struct Beverage {
     public readonly Coffee Coffee;
 }
 
-[Arg
-
 [Subcommand(Description="Create some tea")]
 public readonly struct Tea {  
     [Option(Short='s', Description="Add a number of sugar cubes to the tea")]
