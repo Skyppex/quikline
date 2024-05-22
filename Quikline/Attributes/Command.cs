@@ -53,7 +53,7 @@ internal static class CommandExtensions
     };
 }
 
-[AttributeUsage(validOn: AttributeTargets.Struct)]
+[AttributeUsage(validOn: AttributeTargets.Struct | AttributeTargets.Field)]
 public class NameAttribute(string name) : Attribute
 {
     public string Name { get; } = name;
