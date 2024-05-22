@@ -6,7 +6,7 @@ internal static class ArgsParser
 {
     public static Args Parse(IEnumerator<string> argIterator, Interface @interface)
     {
-        var parsed = new Args(@interface.CommandType);
+        var parsed = new Args(@interface.CommandType, @interface.CommandName);
         IEnumerator<Argument> interfaceArgumentIterator = @interface.Arguments.GetEnumerator();
 
         while (true)
