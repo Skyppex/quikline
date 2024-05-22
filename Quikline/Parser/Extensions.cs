@@ -9,7 +9,7 @@ internal static class TypeExtensions
 {
     public static Type GetUnderlyingType(this Type fieldType) => Nullable.GetUnderlyingType(fieldType)?.GetUnderlyingType() ?? fieldType;
     
-    public static void PrintUsageName(this Type type, FieldInfo? fieldInfo = null)
+    public static void PrintUsageName(this Type type, FieldInfo? fieldInfo)
     {
         var underlyingType = type.GetUnderlyingType();
 
@@ -17,13 +17,21 @@ internal static class TypeExtensions
         
         if (underlyingType.IsEnum)
         {
-            var names = Enum.GetNames(underlyingType);
-            
-            for (var i = 0; i < names.Length; i++)
-            {
-                Console.Out.Write(names[i].SplitPascalCase().ToKebabCase());
+            var variantNames = Enum.GetNames(underlyingType);
+            var enumFields = type.GetFields();
+            var names = new Dictionary<string, string>();
 
-                if (i >= names.Length - 1)
+            foreach (var variantName in variantNames)
+            {
+                var variantNameAttr = enumFields.Single(ef => ef.Name == variantName).GetCustomAttribute<NameAttribute>();
+                names.Add(variantName, variantNameAttr is null ? variantName : variantNameAttr.Name);
+            }
+
+            for (var i = 0; i < names.Count; i++)
+            {
+                Console.Out.Write(names.ElementAt(i).Value.SplitPascalCase().ToKebabCase());
+
+                if (i >= names.Count - 1)
                     continue;
 
                 using (new Help.Color(ConsoleColor.Gray))
@@ -43,7 +51,7 @@ internal static class TypeExtensions
             using (new Help.Color(ConsoleColor.Gray))
                 Console.Out.Write("[");
 
-            genericType!.PrintUsageName();
+            genericType!.PrintUsageName(fieldInfo);
 
             var fixedSizeAttribute = fieldInfo.GetCustomAttribute<FixedSizeAttribute>();
 
@@ -62,7 +70,8 @@ internal static class TypeExtensions
             return;
         }
 
-        var typeName = underlyingType.Name
+        var nameAttr = underlyingType.GetCustomAttribute<NameAttribute>();
+        var typeName = (nameAttr?.Name ?? underlyingType.Name)
             .PrettifyTypeName()
             .SplitPascalCase()
             .ToKebabCase();

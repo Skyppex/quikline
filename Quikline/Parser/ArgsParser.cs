@@ -201,13 +201,13 @@ internal static class ArgsParser
         parsed.AddOption(option);
     }
     
-    private static object GetValue(Type type, string value, FieldInfo? fieldInfo, string arg, string text)
+    private static object GetValue(Type type, string valueArg, FieldInfo? fieldInfo, string arg, string text)
     {
         var underlyingType = type.GetUnderlyingType();
         
         if (underlyingType == typeof(int))
         {
-            if (!int.TryParse(value, out var intValue))
+            if (!int.TryParse(valueArg, out var intValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected an integer value for {text} {arg}.");
@@ -221,7 +221,7 @@ internal static class ArgsParser
         
         if (underlyingType == typeof(float))
         {
-            if (!float.TryParse(value, out var floatValue))
+            if (!float.TryParse(valueArg, out var floatValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected a float value for {text} {arg}.");
@@ -235,7 +235,7 @@ internal static class ArgsParser
         
         if (underlyingType == typeof(double))
         {
-            if (!double.TryParse(value, out var doubleValue))
+            if (!double.TryParse(valueArg, out var doubleValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected a double value for {text} {arg}.");
@@ -249,7 +249,7 @@ internal static class ArgsParser
         
         if (underlyingType == typeof(char))
         {
-            if (!char.TryParse(value, out var charValue))
+            if (!char.TryParse(valueArg, out var charValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected a char value for {text} {arg}.");
@@ -262,11 +262,29 @@ internal static class ArgsParser
         }
         
         if (underlyingType == typeof(string))
-            return value;
+            return valueArg;
         
         if (underlyingType.IsEnum)
         {
-            if (!Enum.TryParse(underlyingType, value, ignoreCase: true, out var enumValue))
+            var enumFields = underlyingType.GetFields();
+            var names = new Dictionary<string, string>();
+
+            foreach (var enumField in enumFields)
+            {
+                var nameAttr = enumField.GetCustomAttribute<NameAttribute>();
+                names.Add(nameAttr is null ? enumField.Name : nameAttr.Name, enumField.Name);
+            }
+
+            if (!names.TryGetValue(valueArg, out var enumVariantName))
+            {
+                Console.Error.WriteLine(
+                    $"Incorrect usage. Expected an enum value for {text} {arg}.");
+
+                Console.Error.Write("Use --help for more information.");
+                Environment.Exit(1);
+            }
+            
+            if (!Enum.TryParse(underlyingType, enumVariantName, ignoreCase: true, out var enumValue))
             {
                 Console.Error.WriteLine(
                     $"Incorrect usage. Expected an enum value for {text} {arg}.");
@@ -285,7 +303,7 @@ internal static class ArgsParser
             var valueFromString = underlyingType.GetMethod(
                     "FromString",
                     BindingFlags.Public | BindingFlags.Static)!
-                .Invoke(null, [value]);
+                .Invoke(null, [valueArg]);
             
             if (valueFromString!.GetType()
                     .GetField("Item2")!
@@ -315,8 +333,8 @@ internal static class ArgsParser
 
             var useRegex = delimiterAttribute?.Regex ?? false;
 
-            var values = useRegex ? SplitRegex(value, delimiter).ToList()
-                : value.Split(delimiter).ToList();
+            var values = useRegex ? SplitRegex(valueArg, delimiter).ToList()
+                : valueArg.Split(delimiter).ToList();
 
             var fixedSizeAttribute = fieldInfo?.GetCustomAttribute<FixedSizeAttribute>();
 

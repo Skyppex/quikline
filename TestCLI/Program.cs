@@ -274,9 +274,11 @@ public enum LogLevel
     Error,
     Critical,
     Fatal,
+    [Name("horrendous-error")]
     ReallyBad,
 }
 
+[Name("range")]
 public readonly record struct IntRange(int Min, int Max) : IFromString<IntRange>
 {
     public override string ToString() => $"IntRange {{ Min: {Min}, Max: {Max} }}";
