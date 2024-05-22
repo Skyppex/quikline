@@ -54,7 +54,7 @@ public readonly struct TestArgs
 
     [Argument(Description = "The other file to process.")]
     public readonly string? OtherFile;
-    
+
     [Argument(Description = "The other file to process.", Default = 100)]
     public readonly int Temperature;
 
@@ -177,6 +177,7 @@ public readonly struct Commands
 }
 
 [Subcommand(Description = "A test subcommand.")]
+[Name("with")]
 [OneOrMoreRelation("oof", nameof(Woofer), nameof(Poofer))]
 [ExclusiveRelation("casing", nameof(CaseSensitive), nameof(CaseInsensitive))]
 [InclusiveRelation("rel", nameof(Force), "scripting")]

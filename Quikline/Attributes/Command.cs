@@ -44,11 +44,17 @@ public class SubcommandAttribute : Attribute, ICommand
 
 internal static class CommandExtensions
 {
-    public static CommandAttribute IntoCommand(this ICommand command) => new()
+    public static CommandAttribute IntoCommand(this SubcommandAttribute subcommand) => new()
     {
-        Description = command.Description,
-        ShortPrefix = command.ShortPrefix,
-        LongPrefix = command.LongPrefix,
+        Description = subcommand.Description,
+        ShortPrefix = subcommand.ShortPrefix,
+        LongPrefix = subcommand.LongPrefix,
         Version = false,
     };
+}
+
+[AttributeUsage(validOn: AttributeTargets.Struct)]
+public class NameAttribute(string name) : Attribute
+{
+    public string Name { get; } = name;
 }
