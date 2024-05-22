@@ -10,7 +10,12 @@
         <Description>Quikline is a command line argument parser. Define your command's interface in a structural way using attributes to provide an expressive API. By calling a single function, all the command line arguments are parsed and your structs are populated with data from the command line. Quikline automatically adds a built-in --help command with conventional formatting and simple colorization and an optional --version command. After parsing, its up to you to define your own behaviour using the structure you defined.</Description>
         <RepositoryUrl>https://github.com/Skyppex/quikline.git</RepositoryUrl>
         <PackageTags>cli cli-parser tool command line interface parser structure</PackageTags>
-        <PackageReleaseNotes>The first update of Quikline v0.2.0. You can now have relationships between options or other relationships. Four simple relations are provided: Inclsive, Exclusive, OneOrMore, and OneWay. They can be combined to create complex relations between your CLIs options</PackageReleaseNotes>
+        <PackageReleaseNotes>
+            Quikline v0.3.0 brings two major additions.
+            Name overriding and custom data types.
+            Create your own data types and implement the `IFromString` interface to decide how a string from the arguments list is turned into your type or return an error message.
+            You can now override the name of subcommand name, your enum variant names, and also your custom data types' names.
+        </PackageReleaseNotes>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     </PropertyGroup>
