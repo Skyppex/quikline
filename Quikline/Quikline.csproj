@@ -4,7 +4,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>0.2.1</Version>
+        <Version>0.3.0</Version>
         <Title>Quikline</Title>
         <Authors>Brage Ingebrigtsen</Authors>
         <Description>Quikline is a command line argument parser. Define your command's interface in a structural way using attributes to provide an expressive API. By calling a single function, all the command line arguments are parsed and your structs are populated with data from the command line. Quikline automatically adds a built-in --help command with conventional formatting and simple colorization and an optional --version command. After parsing, its up to you to define your own behaviour using the structure you defined.</Description>
