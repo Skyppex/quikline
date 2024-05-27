@@ -1,4 +1,6 @@
-﻿using Quikline.Attributes;
+﻿using System.Reflection;
+
+using Quikline.Attributes;
 using Quikline.Parser.Models;
 
 namespace Quikline.Parser;
@@ -32,6 +34,11 @@ internal static class Help
 
         if (relations.Count > 0)
             PrintRelations(relations, @interface);
+
+        var extraHelps = @interface.CommandType.GetCustomAttributes<ExtraHelpAttribute>().ToList();
+
+        if (extraHelps.Count > 0)
+            PrintExtraHelp(extraHelps);
     }
 
     private static void PrintUsage(Interface @interface)
@@ -206,6 +213,24 @@ internal static class Help
                 relation.PrintUsage(@interface);
 
                 if (i < relations.Count - 1)
+                    Console.Out.WriteLine();
+            }
+        }
+    }
+
+    private static void PrintExtraHelp(List<ExtraHelpAttribute> extraHelps)
+    {
+        Console.Out.WriteLine("");
+        Console.Out.WriteLine("");
+
+        using (new Color(ConsoleColor.Gray))
+        {
+            for (int i = 0; i < extraHelps.Count; i++)
+            {
+                var extraHelp = extraHelps[i];
+                extraHelp.PrintUsage();
+
+                if (i < extraHelps.Count - 1)
                     Console.Out.WriteLine();
             }
         }

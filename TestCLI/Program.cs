@@ -11,6 +11,13 @@ Console.WriteLine(a);
 // ReSharper disable UnassignedReadonlyField
 
 [Command(Version = true, Description = "A test CLI program.")]
+[ExtraHelp(Header = "Stuff", Text =
+    """
+    This is some <darkred>extra</> help text.
+    It can be on multiple lines.
+        It can have indents.
+    And it all works just fine.
+    """)]
 [ExclusiveRelation("casing", nameof(CaseSensitive), nameof(CaseInsensitive))]
 [InclusiveRelation("rel", nameof(Force), "scripting")]
 [OneOrMoreRelation("scripting", nameof(None), "casing")]
