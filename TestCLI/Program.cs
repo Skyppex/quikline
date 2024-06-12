@@ -26,7 +26,7 @@ public readonly struct TestArgs
 {
     [Option(Short = 'r', Description = "Range (format: min..max).")]
     public readonly IntRange range;
-    
+
     [Argument(Name = "range", Description = "Range (format: min..max).")]
     public readonly IntRange? rangeArg;
 
@@ -102,16 +102,16 @@ public readonly struct TestArgs
 
             if (field.FieldType.IsArray)
             {
-                var array = (Array) field.GetValue(this)!;
+                var array = (Array)field.GetValue(this)!;
                 builder.Append($"    {field.Name}: [");
-                
+
                 for (var i = 0; i < array.Length; i++)
                 {
                     builder.Append(array.GetValue(i));
                     if (i != array.Length - 1)
                         builder.Append(", ");
                 }
-                
+
                 builder.Append("],\n");
                 continue;
             }
@@ -292,7 +292,7 @@ public readonly record struct IntRange(int Min, int Max) : IFromString<IntRange>
     public static (IntRange?, string?) FromString(string value)
     {
         var parts = value.Split("..");
-        
+
         if (parts.Length != 2)
             return (default, "Invalid range format. Expected 'min..max'.");
 
