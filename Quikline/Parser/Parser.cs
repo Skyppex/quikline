@@ -95,7 +95,7 @@ public static class Quik
     {
         if (args.Subcommand is null)
             return (args, args.CommandType);
-        
+
         return GetCommand(args.Subcommand);
     }
 
@@ -125,13 +125,13 @@ public static class Quik
     {
         if (relation is ExclusiveRelationAttribute exclusive)
             return ValidateExclusiveRelation(exclusive, passedArgs, relations, out relationPassed);
-        
+
         if (relation is InclusiveRelationAttribute inclusive)
             return ValidateInclusiveRelation(inclusive, passedArgs, relations, out relationPassed);
-        
+
         if (relation is OneOrMoreRelationAttribute oneOrMore)
             return ValidateOneOrMoreRelation(oneOrMore, passedArgs, relations, out relationPassed);
-        
+
         if (relation is OneWayRelationAttribute oneWay)
             return ValidateOneWayRelation(oneWay, passedArgs, relations, out relationPassed);
 
@@ -189,7 +189,7 @@ public static class Quik
             .Where(r => r.result is not null)
             .Select(r => r.result)
             .ToList();
-        
+
         return $"{string.Join(", ", names)} are mutually exclusive." +
                (errors.Count != 0 ? "\n" + string.Join("\n", errors) : "");
     }
@@ -203,7 +203,7 @@ public static class Quik
         var relevantOptions = passedArgs.Options
             .Where(o => inclusive.Args.Contains(o.FieldName))
             .ToList();
-        
+
         var relevantRelations = relations
             .Where(r => inclusive.Args.Contains(r.Name))
             .ToList();
@@ -223,7 +223,7 @@ public static class Quik
                     return (name, relationPassed, result);
                 })
             .ToList();
-        
+
         var passed = relevantOptions.Count(r => r.Passed) +
             passedRelations.Count(r => r.relationPassed);
 
@@ -234,7 +234,7 @@ public static class Quik
             relationPassed = passed == inclusive.Args.Length;
             return null;
         }
-        
+
         relationPassed = false;
 
         var names = relevantOptions.Select(r => r.Long.ToString())
@@ -247,7 +247,7 @@ public static class Quik
             .Where(r => r.result is not null)
             .Select(r => r.result)
             .ToList();
-        
+
         return $"{string.Join(", ", names)} are mutually inclusive." +
                (errors.Count != 0 ? "\n" + string.Join("\n", errors) : "");
     }
@@ -261,7 +261,7 @@ public static class Quik
         var relevantOptions = passedArgs.Options
             .Where(o => oneOrMore.Args.Contains(o.FieldName))
             .ToList();
-        
+
         var relevantRelations = relations
             .Where(r => oneOrMore.Args.Contains(r.Name))
             .ToList();
@@ -281,7 +281,7 @@ public static class Quik
                     return (name, relationPassed, result);
                 })
             .ToList();
-        
+
         var passed = relevantOptions.Count(r => r.Passed) +
             passedRelations.Count(r => r.relationPassed);
 
@@ -290,7 +290,7 @@ public static class Quik
             relationPassed = passed > 0;
             return null;
         }
-        
+
         relationPassed = false;
 
         var names = relevantOptions.Select(r => r.Long.ToString())
@@ -313,9 +313,9 @@ public static class Quik
     {
         var fromOption = passedArgs.Options
             .FirstOrDefault(o => o.FieldName == oneWay.From);
-        
+
         var fromPassed = fromOption.Passed;
-        
+
         if (fromOption == default)
         {
             var result = CheckRelation(passedArgs, relations, oneWay.Name, oneWay.From, false, out relationPassed);
@@ -336,7 +336,7 @@ public static class Quik
             .FirstOrDefault(o => o.FieldName == oneWay.To);
 
         var toPassed = toOption.Passed;
-        
+
         if (toOption == default)
         {
             var result = CheckRelation(passedArgs, relations, oneWay.Name, oneWay.To, true, out relationPassed);
@@ -373,7 +373,7 @@ public static class Quik
 
         if (required)
             relation._required = true;
-        
+
         var result = ValidateRelation(passedArgs, relation, relations, out relationPassed);
 
         return result is null ? null
