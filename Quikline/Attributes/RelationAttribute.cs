@@ -19,6 +19,9 @@ public abstract class RelationAttribute(string name) : Attribute
     internal abstract void PrintUsage(Interface @interface);
 }
 
+/// <summary>
+/// Only one option in the group can be provided
+/// </summary>
 public class ExclusiveRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
     public string[] Args { get; init; } = args;
@@ -62,6 +65,9 @@ public class ExclusiveRelationAttribute(string name, params string[] args) : Rel
     }
 }
 
+/// <summary>
+/// At least one option in the group must be provided
+/// </summary>
 public class OneOrMoreRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
     public string[] Args { get; init; } = args;
@@ -105,6 +111,9 @@ public class OneOrMoreRelationAttribute(string name, params string[] args) : Rel
     }
 }
 
+/// <summary>
+/// All options in the group must be provided
+/// </summary>
 public class InclusiveRelationAttribute(string name, params string[] args) : RelationAttribute(name)
 {
     public string[] Args { get; init; } = args;
@@ -148,6 +157,9 @@ public class InclusiveRelationAttribute(string name, params string[] args) : Rel
     }
 }
 
+/// <summary>
+/// If option 'a' is provided option 'b' must also be provided, but not the other way around
+/// </summary>
 public class OneWayRelationAttribute(string name) : RelationAttribute(name)
 {
     public required string From { get; init; }

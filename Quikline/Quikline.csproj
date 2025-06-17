@@ -1,27 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <Version>0.3.0</Version>
-        <Title>Quikline</Title>
-        <Authors>Brage Ingebrigtsen</Authors>
-        <Description>Quikline is a command line argument parser. Define your command's interface in a structural way using attributes to provide an expressive API. By calling a single function, all the command line arguments are parsed and your structs are populated with data from the command line. Quikline automatically adds a built-in --help command with conventional formatting and simple colorization and an optional --version command. After parsing, its up to you to define your own behaviour using the structure you defined.</Description>
-        <RepositoryUrl>https://github.com/Skyppex/quikline.git</RepositoryUrl>
-        <PackageTags>cli cli-parser tool command line interface parser structure</PackageTags>
-        <PackageReleaseNotes>
-            Quikline v0.3.0 brings two major additions.
-            Name overriding and custom data types.
-            Create your own data types and implement the `IFromString` interface to decide how a string from the arguments list is turned into your type or return an error message.
-            You can now override the name of subcommand name, your enum variant names, and also your custom data types' names.
-        </PackageReleaseNotes>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    </PropertyGroup>
-    <ItemGroup>
-        <None Include="..\README.md" Pack="true" PackagePath="\"/>
-        <None Include="..\LICENSE.txt" Pack="true" PackagePath="\"/>
-    </ItemGroup>
-    
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>0.4.0</Version>
+    <Title>Quikline</Title>
+    <Authors>Brage Ingebrigtsen</Authors>
+    <Description>Quikline is a command line argument parser. Define your command's interface in a structural way using attributes to provide an expressive API. By calling a single function, all the command line arguments are parsed and your structs are populated with data from the command line. Quikline automatically adds a built-in --help command with conventional formatting and simple colorization and an optional --version command. After parsing, its up to you to define your own behaviour using the structure you defined.</Description>
+    <RepositoryUrl>https://github.com/Skyppex/quikline.git</RepositoryUrl>
+    <PackageTags>cli cli-parser tool command line interface parser structure</PackageTags>
+    <PackageReleaseNotes>Quikline v0.4.0 upgrades the dotnet version to dotnet 9</PackageReleaseNotes>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\"></None>
+    <None Include="..\LICENSE.txt" Pack="true" PackagePath="\"></None>
+  </ItemGroup>
 </Project>

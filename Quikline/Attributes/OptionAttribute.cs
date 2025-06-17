@@ -60,3 +60,9 @@ public class OptionAttribute : Attribute
     public object? Default { get; init; }
     public bool Required { get; init; }
 }
+
+[AttributeUsage(validOn: AttributeTargets.Field)]
+public class MultiFlagAttribute : Attribute
+{
+    public ushort Max { get; init; }
+}

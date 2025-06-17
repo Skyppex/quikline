@@ -475,6 +475,12 @@ public static class Quik
                 break;
 
             default:
+                if (option.MultiFlag is -1 or > 0)
+                {
+                    field.SetValue(instance, option.Value);
+                    break;
+                }
+
                 field.SetValue(instance, option.Value);
                 break;
         }

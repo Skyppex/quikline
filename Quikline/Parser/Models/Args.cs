@@ -8,6 +8,15 @@ internal class Args(Type commandType, string? commandName = null)
     public Args? Subcommand { get; set; }
     public string CommandName { get; } = commandName ?? commandType.Name;
 
-    public void AddOption(Option option) => Options.Add(option);
+    public void AddOption(Option option)
+    {
+        if (Options.Contains(option, new OptionNameEqualityComparer()))
+        {
+            var existing = Options.First(o => new OptionNameEqualityComparer().Equals(o, option));
+            Options.Remove(existing);
+        }
+
+        Options.Add(option);
+    }
     public void AddArgument(Argument argument) => Arguments.Add(argument);
 }

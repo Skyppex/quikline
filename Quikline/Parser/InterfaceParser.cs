@@ -147,6 +147,7 @@ internal static class InterfaceParser
                 0,
                 new Option(
                     false,
+                    0,
                     "",
                     false,
                     shortVersion,
@@ -178,6 +179,7 @@ internal static class InterfaceParser
                 0,
                 new Option(
                     false,
+                    0,
                     "",
                     false,
                     shortHelp,
@@ -225,8 +227,15 @@ internal static class InterfaceParser
                 new Name(optionAttr.Long)),
         };
 
+        var multiFlagAttr = field.GetCustomAttribute<MultiFlagAttribute>();
+
         var option = new Option(
             false,
+            multiFlagAttr is null
+                ? 0
+                : (multiFlagAttr is { Max: 0 }
+                    ? -1
+                    : (int)multiFlagAttr.Max),
             field.Name,
             optionAttr.Required,
             @short,
@@ -321,7 +330,18 @@ internal static class InterfaceParser
     {
         List<Type> supportedTypes =
         [
-            typeof(bool), typeof(int), typeof(float), typeof(double), typeof(char),
+            typeof(bool),
+            typeof(sbyte),
+            typeof(byte),
+            typeof(short),
+            typeof(ushort),
+            typeof(int),
+            typeof(uint),
+            typeof(long),
+            typeof(ulong),
+            typeof(float),
+            typeof(double),
+            typeof(char),
             typeof(string)
         ];
 

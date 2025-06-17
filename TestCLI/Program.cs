@@ -26,9 +26,17 @@ public readonly struct TestArgs
     [Argument(Description = "Array of numbers (format: x,y,z).")]
     public readonly int[] numArray;
 
+    [MultiFlag]
+    [Option(Short = 'y', Description = "Yolo")]
+    public readonly byte yolo;
+
+    [MultiFlag(Max = 2)]
+    [Option(Short = 'Y', Description = "Yolo")]
+    public readonly byte yolo2;
+
     [FixedSize(3)]
     [Delimiter(" +", Regex = true)]
-    [Argument(Description = "Array of ranges (format: x1..x2 y1..y2 z1..z2).")]
+    [Argument(Description = "Array of ranges (format: \"x1..x2 y1..y2 z1..z2\").")]
     public readonly IntRange[] rangeArray;
 
     [Option(Short = '0', Description = "No elements.")]
@@ -46,7 +54,7 @@ public readonly struct TestArgs
     [Option(Short = 's', Description = "Case insensitive.")]
     public readonly bool CaseInsensitive;
 
-    [Option(ShortPrefix = '+', Short = 's', Description = "Case sensitive.")]
+    [Option(ShortPrefix = '+', Short = 's', LongPrefix = "++++++", Description = "Case sensitive.")]
     public readonly bool CaseSensitive;
 
     [Argument(Description = "The file to process.")]

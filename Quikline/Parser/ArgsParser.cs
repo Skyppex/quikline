@@ -173,7 +173,7 @@ internal static class ArgsParser
         IEnumerator<string> argIterator,
         Option option)
     {
-        if (parsed.Options.Contains(option, new OptionNameEqualityComparer()))
+        if (parsed.Options.Contains(option, new OptionNameEqualityComparer()) && option.MultiFlag == 0)
         {
             Console.Error.WriteLine($"Incorrect usage. Duplicate option: {arg}");
             Console.Error.Write("Use --help for more information.");
@@ -185,7 +185,46 @@ internal static class ArgsParser
         if (optionType == typeof(bool))
         {
             parsed.AddOption(option.Passed(true));
+            return;
+        }
 
+        if (option.MultiFlag is -1 or > 0)
+        {
+            object val;
+            var comparer = new OptionNameEqualityComparer();
+
+            if (parsed.Options.Contains(option, comparer))
+            {
+                var existingOption = parsed.Options.First(o => comparer.Equals(o, option));
+                val = existingOption.Value;
+
+                val = val switch {
+                    sbyte v => (object)(v + 1),
+                    byte v => (object)(v + 1),
+                    short v => (object)(v + 1),
+                    ushort v => (object)(v + 1),
+                    int v => (object)(v + 1),
+                    uint v => (object)(v + 1),
+                    long v => (object)(v + 1),
+                    ulong v => (object)(v + 1),
+                    _ => throw new System.Diagnostics.UnreachableException(),
+                };
+
+                val = Convert.ChangeType(val, optionType);
+            }
+            else
+            {
+                val = Convert.ChangeType(1, optionType);
+            }
+
+            if (option.MultiFlag > 0 && Convert.ToInt64(val) > option.MultiFlag)
+            {
+                Console.Error.WriteLine($"Incorrect usage. {arg} cannot be passed more than {option.MultiFlag} times");
+                Console.Error.Write("Use --help for more information.");
+                Environment.Exit(1);
+            }
+
+            parsed.AddOption(option.Passed(val));
             return;
         }
 

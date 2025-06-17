@@ -34,7 +34,7 @@ Each of these have several properties for you to fill in to customize your API, 
   - Can have a description which is used in the help text
 
 - Args
-  - Use this to group arguments and options together in a struct
+  - Use this to group arguments and options together in their own struct
   - Can have a short and a long name which is used for all subcommands and options inside the struct
   - Discriminates between lower and upper case short names (e.g. `-v` and `-V` are different)
   - Provide a description which is used in the help text
@@ -70,6 +70,7 @@ Each of these have several properties for you to fill in to customize your API, 
 ## Examples
 
 ### Simple command
+
 ```csharp
 [Command(Version=true, Description="Create some tea")]
 public readonly struct Tea {  
@@ -96,6 +97,7 @@ public enum TeaType {
 ```
 
 ### Command with subcommands
+
 ```csharp
 [Command(Version = true, Description="Create a beverage")]
 public readonly struct Beverage {
@@ -149,6 +151,7 @@ public enum CoffeeType {
 ```
 
 ### Command with relations
+
 ```csharp
 [Command(Version = true, Description="Create a beverage")]
 // This ensures that if you want extra milk, you also have to have milk... which just makes sense

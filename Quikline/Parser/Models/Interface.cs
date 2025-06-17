@@ -11,11 +11,11 @@ internal class Interface(ICommand command, Type commandType, string? commandName
     public readonly string CommandName = commandName ?? ProgramName;
     public readonly Type CommandType = commandType;
     public readonly Interface? Parent = parent;
-    
+
     public readonly string? Description = command.Description;
     public readonly Prefix ShortPrefix = new(command.ShortPrefix);
     public readonly Prefix LongPrefix = new(command.LongPrefix);
-    
+
     public List<Option> Options { get; set; } = [];
     public List<Argument> Arguments { get; set; } = [];
     
@@ -58,6 +58,7 @@ internal class Interface(ICommand command, Type commandType, string? commandName
 
 internal readonly record struct Option(
     bool Passed,
+    int MultiFlag, // 0 means no, -1 means yes, > 0 means yes and max is passed with that amount
     string FieldName,
     bool Required,
     Short? Short,
@@ -69,6 +70,7 @@ internal readonly record struct Option(
 {
     public static Option ShortOnly(Short @short) => new(
         false,
+        0,
         "",
         false,
         @short,
